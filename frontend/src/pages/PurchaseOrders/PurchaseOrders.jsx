@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getPurchaseOrders } from "../../services/purchaseService";
+import { getPurchaseOrders } from "../../services/purchaseOrderService";
 import "./PurchaseOrders.css";
 
 const PAGE_SIZE = 10;
@@ -42,8 +42,8 @@ function PurchaseOrders() {
         limit: PAGE_SIZE,
         search: keyword,
       });
-      setOrders(data.rows || []);
-      setTotal(data.count || 0);
+      setOrders(data.data || []);
+      setTotal(data.total || 0);
       setCurrentPage(page);
 
     } catch (error) {
@@ -82,13 +82,13 @@ function PurchaseOrders() {
 
 
   const handleCreate = () => {
-    navigate("/orderDetail/new");
+    navigate("/purchaseorders/create");
   };
 
 
 
   const handleOrderClick = (orderId) => {
-    navigate(`/orderDetail/${orderId}`);
+    navigate(`/purchaseorders/${orderId}`);
   };
 
 
@@ -153,7 +153,7 @@ function PurchaseOrders() {
           </p>
         </div>
 
-        <button type="button" className="create-order-button" onClick={handleCreate}>          
+        <button type="button" className="create-order-button" onClick={handleCreate}>
           <span className="create-order-icon">
             +
           </span>
@@ -168,12 +168,12 @@ function PurchaseOrders() {
             Mã đơn hàng / Tên nhà cung cấp
           </label>
 
-          <input id="order-search" type="text" value={searchInput} placeholder="Nhập mã đơn hàng hoặc tên nhà cung cấp..." 
-          onChange={(event) =>   setSearchInput(event.target.value) } onKeyDown={handleSearchKeyDown}/>
+          <input id="order-search" type="text" value={searchInput} placeholder="Nhập mã đơn hàng hoặc tên nhà cung cấp..."
+            onChange={(event) => setSearchInput(event.target.value)} onKeyDown={handleSearchKeyDown} />
 
         </div>
 
-        <button type="button" className="search-button" onClick={handleSearch} disabled={loading}>          
+        <button type="button" className="search-button" onClick={handleSearch} disabled={loading}>
           {loading
             ? "Đang tìm..."
             : "Tìm kiếm"}
@@ -213,22 +213,22 @@ function PurchaseOrders() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="6" className="table-message">                  
+                <td colSpan="6" className="table-message">
                   Đang tải dữ liệu...
                 </td>
               </tr>
-            ):orders.length === 0 ? (
+            ) : orders.length === 0 ? (
               <tr>
                 <td colSpan="6" className="table-message">
                   Không tìm thấy đơn mua hàng.
                 </td>
               </tr>
-            ):(
+            ) : (
               orders.map((order) => {
                 const status =
                   getStatus(order.status);
                 return (
-                  <tr key={order.id} onClick={() =>   handleOrderClick(order.id) }>                    
+                  <tr key={order.id} onClick={() => handleOrderClick(order.id)}>
                     <td className="order-code">
                       {order.purchaseCode}
                     </td>
@@ -265,7 +265,7 @@ function PurchaseOrders() {
       </div>
 
       <div className="orders-pagination">
-        <button  type="button"  disabled={currentPage===1||loading||totalPages=== 0}  onClick={handlePreviousPage}>
+        <button type="button" disabled={currentPage === 1 || loading || totalPages === 0} onClick={handlePreviousPage}>
           ← Trước
         </button>
         <span>
@@ -277,7 +277,7 @@ function PurchaseOrders() {
           </strong>
         </span>
 
-        <button type="button" disabled={ currentPage >= totalPages || loading || totalPages === 0} onClick={handleNextPage}>
+        <button type="button" disabled={currentPage >= totalPages || loading || totalPages === 0} onClick={handleNextPage}>
           Sau →
         </button>
       </div>

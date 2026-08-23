@@ -18,11 +18,12 @@ async function seed() {
         password: hashedPassword,
         gender: 'male',
         phoneNumber: '0901234567',
+        role:'admin'
       },
     });
 
     console.log('Seed users xong:', admin.username);
-    const [supplier1] = await db.Supplier.findOrCreate({
+    await db.Supplier.findOrCreate({
       where: { supplierName: 'Công ty TNHH Thương mại ABC' },
       defaults: {
         phone: '0901234567',

@@ -1,5 +1,22 @@
 import api from "./api";
 
+
+export const getPurchaseOrders = async ({
+  page = 1,
+  limit = 10,
+  search = "",
+}) => {
+  const res = await api.get("/api/purchase", {
+    params: {
+      page,
+      limit,
+      search,
+    },
+  });
+
+  return res.data;
+};
+
 export const getPurchaseOrderById = async (id) => {
   const res = await api.get(`/api/purchase/${id}`);
   return res.data;
@@ -24,3 +41,4 @@ export const receivePurchaseOrder = async (id) => {
   const res = await api.patch(`/api/purchase/${id}/receive`);
   return res.data;
 };
+

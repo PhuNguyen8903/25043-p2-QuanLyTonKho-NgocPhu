@@ -1,5 +1,5 @@
 const express = require('express');
-const { createOrder, searchOrders } = require('../controller/purchaseController');
+const { createOrder, searchOrders, getOrdersbyId, updateDraftOrder, confirmOrder, receiveOrder } = require('../controller/purchaseController');
 const { createOrderValidator } = require('../validator/purchaseOrderValidator');
 const handlerValidation = require('../middleware/validateErrorHandler');
 const router = express.Router();

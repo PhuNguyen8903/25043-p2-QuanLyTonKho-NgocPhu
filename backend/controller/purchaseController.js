@@ -1,4 +1,4 @@
-const { PurchaseOrder,Product, PurchaseOrderItem, Supplier, User, Sequelize } = require("../model");
+const { PurchaseOrder, Product, PurchaseOrderItem, Supplier, User, Sequelize } = require("../model");
 const { Op } = Sequelize;
 
 
@@ -24,7 +24,15 @@ exports.searchOrders = async (req, res, next) => {
 
         const orders = await PurchaseOrder.findAndCountAll({
             where,
-            include: [{ model: Supplier, as: 'supplier' }],
+            include: [
+                {
+                    model: Supplier,
+                    as: 'supplier'
+                }, {
+                    model: User,
+                    as: "assignedEmployee",
+                    attributes: ["id", "username"],
+                }],
             limit: pageSize,
             offset: (currentPage - 1) * pageSize,
         });

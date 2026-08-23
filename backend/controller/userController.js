@@ -1,9 +1,14 @@
 const { User, Sequelize } = require("../model");
 
-exports.getUser  = async (req,res,next)=>{
+exports.getUsers  = async (req,res,next)=>{
     try {
-        const user = await User.findAll();
-        res.json(user)
+        const users = await User.findAll({
+            // where:{
+            //     role : 'employee'
+            // },
+            attributes: ['id', 'fullName', 'username'],
+        });
+        res.json(users)
     } catch (error) {
         next(error)
     }

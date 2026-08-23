@@ -8,6 +8,7 @@ import {
     receivePurchaseOrder,
 } from "../../services/purchaseOrderService";
 import "./PurchaseOrderDetail.css";
+import { getEmployees } from "../../services/userService";
 
 
 
@@ -76,10 +77,24 @@ function PurchaseOrderDetail() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const [employees, setEmployees] = useState([]);
 
     const isReadOnly =
         status === "confirmed" ||
         status === "stocked";
+
+    useEffect(() => {
+        const fetchEmployees = async () => {
+            try {
+                const data = await getEmployees();
+                setEmployees(data);
+            } catch (error) {
+                console.error("Get employees error:", error);
+            }
+        };
+
+        fetchEmployees();
+    }, []);
 
 
     useEffect(() => {
@@ -325,15 +340,12 @@ function PurchaseOrderDetail() {
 
                 if (data.id) {
                     navigate(
-                        `/purchase-orders/${data.id}`,
+                        `/purchaseorders/${data.id}`,
                         { replace: true }
                     );
                 }
             } else {
-                await updatePurchaseOrder(
-                    id,
-                    payload
-                );
+                await updatePurchaseOrder(id, payload);
 
                 setSuccess(
                     "Cập nhật đơn mua hàng thành công."
@@ -341,7 +353,6 @@ function PurchaseOrderDetail() {
             }
         } catch (error) {
             console.error(error);
-
             setError(
                 error.response?.data?.message ||
                 "Có lỗi xảy ra khi lưu đơn hàng."
@@ -436,7 +447,7 @@ function PurchaseOrderDetail() {
                         type="button"
                         className="back-button"
                         onClick={() =>
-                            navigate("/purchase-orders")
+                            navigate("/purchaseorders")
                         }
                     >
                         ← Quay về danh sách
@@ -522,22 +533,32 @@ function PurchaseOrderDetail() {
                     </div>
 
                     <div className="form-group">
-
                         <label>
-                            Nhân viên phụ trách
-                            <span>*</span>
+                            Nhân viên phụ trách <span>*</span>
                         </label>
 
-                        <input
-                            type="number"
-                            name="assigned_employee_id"
-                            value={
-                                formData.assigned_employee_id
+                        <select
+                            value={formData.assigned_employee_id}
+                            onChange={(e) =>
+                                setFormData({
+                                    ...formData,
+                                    assigned_employee_id: Number(e.target.value)
+                                })
                             }
-                            onChange={handleChange}
-                            placeholder="Nhập ID nhân viên"
-                            disabled={isReadOnly}
-                        />
+                        >
+                            <option value="">
+                                -- Chọn nhân viên phụ trách --
+                            </option>
+
+                            {employees.map((employee) => (
+                                <option
+                                    key={employee.id}
+                                    value={employee.id}
+                                >
+                                    {employee.fullName || employee.username}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     <div className="form-group">
@@ -767,7 +788,7 @@ function PurchaseOrderDetail() {
                     type="button"
                     className="secondary-button"
                     onClick={() =>
-                        navigate("/purchase-orders")
+                        navigate("/purchaseorders")
                     }
                 >
                     Quay về danh sách

@@ -5,25 +5,25 @@ module.exports = (sequelize, DataTypes) => {
     class User extends Model {
         static associate(models) {
             models.User.hasMany(models.PurchaseOrder, {
-                 foreignKey: 'created_by', as: 'createdOrders' 
-                });
+                foreignKey: 'created_by', as: 'createdOrders'
+            });
 
             models.User.hasMany(models.PurchaseOrder, {
-                 foreignKey: 'update_by', as: 'updatedOrders' 
-                });
+                foreignKey: 'update_by', as: 'updatedOrders'
+            });
 
             models.User.hasMany(models.PurchaseOrder, {
-                 foreignKey: 'assigned_employee_id', as: 'assignedOrders' 
-                });
+                foreignKey: 'assigned_employee_id', as: 'assignedOrders'
+            });
             User.hasMany(models.SalesOrder, {
-                 foreignKey: 'created_by', as: 'createdSalesOrders' 
-                });
+                foreignKey: 'created_by', as: 'createdSalesOrders'
+            });
             User.hasMany(models.SalesOrder, {
-                 foreignKey: 'update_by', as: 'updatedSalesOrders' 
-                });
+                foreignKey: 'update_by', as: 'updatedSalesOrders'
+            });
             User.hasMany(models.SalesOrder, {
-                 foreignKey: 'assigned_employee_id', as: 'saledOrders' 
-                });
+                foreignKey: 'assigned_employee_id', as: 'saledOrders'
+            });
         }
     }
 
@@ -57,10 +57,15 @@ module.exports = (sequelize, DataTypes) => {
         phoneNumber: {
             type: DataTypes.STRING,
             allowNull: false
-        }
+        },
+        role: {
+            type: DataTypes.ENUM('admin', 'employee'),
+            allowNull: false,
+            defaultValue: 'employee',
+        },
     }, {
         sequelize,
-        moduleName: "User",
+        modelName: "User",
         tableName: "Users", // ten bang trong mysql
         timestamps: false, // create at update at
         defaultScope: {

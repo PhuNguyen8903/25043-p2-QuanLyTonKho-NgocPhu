@@ -24,7 +24,6 @@ function POS() {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<PurchaseOrders />} />
       <Route path="/login" element={<Login />} />
       <Route element={<MainLayout />}>
         <Route path="/purchaseorders" element={<PurchaseOrders />} />
@@ -36,7 +35,6 @@ function AppRoutes() {
         <Route path="/pos" element={<POS />} />
       </Route>
 
-      {/* Default */}
       <Route path="*" element={<Navigate to="/login" replace />} /></Routes>
   );
 }

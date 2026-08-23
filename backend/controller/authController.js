@@ -59,6 +59,7 @@ exports.login = async (req,res,next) => {
         }
 
         req.session.userId = user.id;
+        req.session.userRole = user.role;
         res.status(200).json({
             message: "login successfull"
         })
