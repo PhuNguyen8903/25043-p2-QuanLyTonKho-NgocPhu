@@ -1,10 +1,40 @@
 const express = require('express');
-const { getOrders, findOrder } = require('../controller/purchaseController');
+const { createOrder, searchOrders } = require('../controller/purchaseController');
+const { createOrderValidator } = require('../validator/purchaseOrderValidator');
+const handlerValidation = require('../middleware/validateErrorHandler');
 const router = express.Router();
 
-router.get("/Orders",
-    getOrders
-)
 
+
+router.get("/", 
+    searchOrders
+);
+
+router.get("/:id", 
+    getOrdersbyId
+);
+
+
+router.post("/", 
+    createOrderValidator(),
+    handlerValidation,
+    createOrder
+    );
+
+
+router.put("/:id", 
+    createOrderValidator(),
+    handlerValidation,
+    updateDraftOrder
+);
+
+router.patch("/:id/confirm",
+    confirmOrder
+);
+
+
+router.patch("/:id/receive", 
+    receiveOrder
+);
 
 module.exports = router

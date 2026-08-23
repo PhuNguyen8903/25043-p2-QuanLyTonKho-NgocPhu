@@ -1,80 +1,183 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+    getPurchaseOrderById,
+    createPurchaseOrder,
+    updatePurchaseOrder,
+    confirmPurchaseOrder,
+    receivePurchaseOrder,
+} from "../../services/purchaseOrderService";
 import "./PurchaseOrderDetail.css";
 
-const STATUS_CONFIG = {
-    draft: {
-        label: "Bản nháp",
-        className: "status-draft",
-    },
-
-    confirmed: {
-        label: "Đã xác nhận",
-        className: "status-confirmed",
-    },
-
-    stocked: {
-        label: "Đã nhập kho",
-        className: "status-stocked",
-    },
-};
 
 
-const PRODUCT_LIST = [
+const suppliers = [
     {
         id: 1,
-        code: "SP001",
-        name: "Laptop Dell Inspiron 15",
+        supplierName: "Công ty TNHH ABC",
     },
     {
         id: 2,
-        code: "SP002",
-        name: "Chuột Logitech M331",
+        supplierName: "Công ty XYZ",
     },
     {
         id: 3,
-        code: "SP003",
-        name: "Bàn phím cơ Keychron K2",
-    },
-    {
-        id: 4,
-        code: "SP004",
-        name: "Màn hình Dell 24 inch",
+        supplierName: "Công ty Samsung Việt Nam",
     },
 ];
 
+
+const products = [
+    {
+        id: 1,
+        productCode: "SP001",
+        productName: "Laptop Dell Inspiron",
+    },
+    {
+        id: 2,
+        productCode: "SP002",
+        productName: "Chuột Logitech",
+    },
+    {
+        id: 3,
+        productCode: "SP003",
+        productName: "Bàn phím cơ Keychron",
+    },
+    {
+        id: 4,
+        productCode: "SP004",
+        productName: "Màn hình Samsung",
+    },
+];
+
+
 function PurchaseOrderDetail() {
     const navigate = useNavigate();
-    const [status, setStatus] = useState("draft");
-    const [supplier, setSupplier] = useState("");
-    const [employee, setEmployee] = useState("");
-    const [orderDate, setOrderDate] = useState("");
-    const [note, setNote] = useState("");
+    const { id } = useParams();
+    const isCreateMode = !id;
 
+    const [formData, setFormData] = useState({
+        supplier_id: "",
+        assigned_employee_id: "",
+        order_date: "",
+        note: "",
+    });
 
     const [items, setItems] = useState([
         {
-            id: Date.now(),
-            productId: "",
+            product_id: "",
+            product_name: "",
             quantity: 1,
-            unitPrice: 0,
+            unit_price: 0,
         },
     ]);
 
-
+    const [status, setStatus] = useState("draft");
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
 
-    const isReadOnly = status === "confirmed" || status === "stocked";
+    const isReadOnly =
+        status === "confirmed" ||
+        status === "stocked";
 
 
-    const handleProductChange = (itemId, productId) => {
-        setItems((currentItems) =>
-            currentItems.map((item) =>
-                item.id === itemId
+    useEffect(() => {
+        if (!id) return;
+
+        const loadOrder = async () => {
+            try {
+                setLoading(true);
+                setError("");
+
+                const data = await getPurchaseOrderById(id);
+
+                setFormData({
+                    supplier_id: data.supplier_id || "",
+                    assigned_employee_id:
+                        data.assigned_employee_id || "",
+                    order_date: data.order_date || "",
+                    note: data.note || "",
+                });
+
+                setStatus(data.status || "draft");
+
+                if (data.items && data.items.length > 0) {
+                    setItems(
+                        data.items.map((item) => {
+                            const product = products.find(
+                                (p) => p.id === item.product_id
+                            );
+
+                            return {
+                                product_id: item.product_id,
+                                product_name:
+                                    product?.productName || "",
+                                quantity: item.quantity,
+                                unit_price: Number(item.unit_price),
+                            };
+                        })
+                    );
+                }
+            } catch (error) {
+                console.error(
+                    "Load purchase order error:",
+                    error
+                );
+
+                setError(
+                    error.response?.data?.message ||
+                    "Không thể tải thông tin đơn hàng."
+                );
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadOrder();
+    }, [id]);
+
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+
+    const handleProductChange = (index, productId) => {
+        const product = products.find(
+            (p) => p.id === Number(productId)
+        );
+
+        setItems((prev) =>
+            prev.map((item, i) =>
+                i === index
                     ? {
                         ...item,
-                        productId,
+                        product_id: productId,
+                        product_name:
+                            product?.productName || "",
+                    }
+                    : item
+            )
+        );
+    };
+
+    const handleItemChange = (
+        index,
+        field,
+        value
+    ) => {
+        setItems((prev) =>
+            prev.map((item, i) =>
+                i === index
+                    ? {
+                        ...item,
+                        [field]: value,
                     }
                     : item
             )
@@ -82,190 +185,307 @@ function PurchaseOrderDetail() {
     };
 
 
-
-    const handleQuantityChange = (itemId, value) => {
-        setItems((currentItems) =>
-            currentItems.map((item) =>
-                item.id === itemId
-                    ? {
-                        ...item,
-                        quantity: Number(value),
-                    }
-                    : item
-            )
-        );
-    };
-
-
-
-    const handlePriceChange = (itemId, value) => {
-        setItems((currentItems) =>
-            currentItems.map((item) =>
-                item.id === itemId
-                    ? {
-                        ...item,
-                        unitPrice: Number(value),
-                    }
-                    : item
-            )
-        );
-    };
-
-
-
-    const handleAddItem = () => {
-        setItems((currentItems) => [
-            ...currentItems,
+    const addItem = () => {
+        setItems((prev) => [
+            ...prev,
             {
-                id: Date.now(),
-                productId: "",
+                product_id: "",
+                product_name: "",
                 quantity: 1,
-                unitPrice: 0,
+                unit_price: 0,
             },
         ]);
     };
 
 
+    const removeItem = (index) => {
+        if (items.length === 1) return;
 
-    const handleDeleteItem = (itemId) => {
-        if (items.length === 1) {
-            return;
-        }
-
-        setItems((currentItems) =>
-            currentItems.filter(
-                (item) => item.id !== itemId
-            )
+        setItems((prev) =>
+            prev.filter((_, i) => i !== index)
         );
     };
 
 
-    const getProduct = (productId) => {
-        return PRODUCT_LIST.find(
-            (product) => product.id === Number(productId)
-        );
-    };
 
     const calculateItemTotal = (item) => {
         return (
             Number(item.quantity || 0) *
-            Number(item.unitPrice || 0)
+            Number(item.unit_price || 0)
         );
     };
 
 
-    const totalAmount = items.reduce(
+    const totalCost = items.reduce(
         (total, item) =>
             total + calculateItemTotal(item),
         0
     );
 
 
+    const buildPayload = () => {
+        return {
+            supplier_id: Number(formData.supplier_id),
+
+            assigned_employee_id: Number(
+                formData.assigned_employee_id
+            ),
+
+            order_date: formData.order_date,
+
+            note: formData.note,
+
+            items: items.map((item) => ({
+                product_id: Number(item.product_id),
+                quantity: Number(item.quantity),
+                unit_price: Number(item.unit_price),
+            })),
+        };
+    };
+
+
+
+    const validateForm = () => {
+        if (!formData.supplier_id) {
+            setError("Vui lòng chọn nhà cung cấp.");
+            return false;
+        }
+
+        if (!formData.assigned_employee_id) {
+            setError(
+                "Vui lòng nhập nhân viên phụ trách."
+            );
+            return false;
+        }
+
+        if (!formData.order_date) {
+            setError("Vui lòng chọn ngày mua hàng.");
+            return false;
+        }
+
+        if (items.length === 0) {
+            setError(
+                "Đơn hàng phải có ít nhất một sản phẩm."
+            );
+            return false;
+        }
+
+        for (const item of items) {
+            if (!item.product_id) {
+                setError(
+                    "Vui lòng chọn đầy đủ sản phẩm."
+                );
+                return false;
+            }
+
+            if (
+                !item.quantity ||
+                Number(item.quantity) <= 0
+            ) {
+                setError(
+                    "Số lượng phải lớn hơn 0."
+                );
+                return false;
+            }
+
+            if (
+                item.unit_price === "" ||
+                Number(item.unit_price) < 0
+            ) {
+                setError(
+                    "Đơn giá không hợp lệ."
+                );
+                return false;
+            }
+        }
+
+        return true;
+    };
+
+
+    const handleSave = async () => {
+        setError("");
+        setSuccess("");
+
+        if (!validateForm()) return;
+
+        try {
+            setLoading(true);
+
+            const payload = buildPayload();
+
+            if (isCreateMode) {
+                const data =
+                    await createPurchaseOrder(payload);
+
+                setSuccess(
+                    "Tạo đơn mua hàng thành công."
+                );
+
+
+                if (data.id) {
+                    navigate(
+                        `/purchase-orders/${data.id}`,
+                        { replace: true }
+                    );
+                }
+            } else {
+                await updatePurchaseOrder(
+                    id,
+                    payload
+                );
+
+                setSuccess(
+                    "Cập nhật đơn mua hàng thành công."
+                );
+            }
+        } catch (error) {
+            console.error(error);
+
+            setError(
+                error.response?.data?.message ||
+                "Có lỗi xảy ra khi lưu đơn hàng."
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+    const handleConfirm = async () => {
+        if (!id) {
+            setError(
+                "Bạn cần lưu đơn hàng trước khi xác nhận."
+            );
+            return;
+        }
+
+        try {
+            setLoading(true);
+            setError("");
+            setSuccess("");
+
+            const data =
+                await confirmPurchaseOrder(id);
+
+            setStatus(data.status);
+
+            setSuccess(
+                "Đơn hàng đã được xác nhận."
+            );
+        } catch (error) {
+            setError(
+                error.response?.data?.message ||
+                "Không thể xác nhận đơn hàng."
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+    const handleReceive = async () => {
+        if (!id) return;
+
+        try {
+            setLoading(true);
+            setError("");
+            setSuccess("");
+
+            const data =
+                await receivePurchaseOrder(id);
+
+            setStatus(data.status);
+
+            setSuccess(
+                "Đã xác nhận nhập kho thành công."
+            );
+        } catch (error) {
+            setError(
+                error.response?.data?.message ||
+                "Không thể xác nhận nhập kho."
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
 
 
     const formatCurrency = (value) => {
-        return new Intl.NumberFormat("vi-VN", {
-            style: "currency",
-            currency: "VND",
-        }).format(value);
+        return new Intl.NumberFormat(
+            "vi-VN"
+        ).format(value);
     };
 
 
-
-    const handleSave = () => {
-
-
-        console.log("SAVE DRAFT", {
-            supplier,
-            employee,
-            orderDate,
-            note,
-            items,
-            totalAmount,
-        });
-
-        alert("Đã lưu đơn hàng ở trạng thái bản nháp.");
-    };
-
-
-    const handleConfirm = () => {
-
-        console.log("CONFIRM ORDER");
-
-        setStatus("confirmed");
-
-        alert("Đơn hàng đã được xác nhận.");
-    };
-
-
-    const handleStock = () => {
-        console.log("STOCK ORDER");
-
-        setStatus("stocked");
-
-        alert(
-            "Đơn hàng đã được nhập kho."
+    if (loading && id && items.length === 0) {
+        return (
+            <div className="purchase-detail-loading">
+                Đang tải đơn hàng...
+            </div>
         );
-    };
-
-
-    const handleBack = () => {
-        navigate("/purchase-orders");
-    };
-
-    const currentStatus =
-        STATUS_CONFIG[status];
+    }
 
 
     return (
-        <div className="purchase-order-detail-page">
-
-
-            <div className="purchase-order-detail-header">
-
+        <div className="purchase-detail-page">
+            <div className="purchase-detail-header">
                 <div>
+                    <button
+                        type="button"
+                        className="back-button"
+                        onClick={() =>
+                            navigate("/purchase-orders")
+                        }
+                    >
+                        ← Quay về danh sách
+                    </button>
 
-                    <div className="page-title-row">
+                    <h1>
+                        {isCreateMode
+                            ? "Tạo đơn mua hàng"
+                            : "Chi tiết đơn mua hàng"}
+                    </h1>
 
-                        <h1>
-                            {status === "draft"
-                                ? "Tạo Đơn mua hàng"
-                                : "Chi tiết Đơn mua hàng"}
-                        </h1>
-
-                        <span
-                            className={`status-badge ${currentStatus.className}`}
-                        >
-                            {currentStatus.label}
-                        </span>
-
-                    </div>
-
-                    <p>
-                        {status === "draft"
-                            ? "Tạo và quản lý thông tin đơn mua hàng"
-                            : "Xem thông tin chi tiết đơn mua hàng"}
-                    </p>
-
+                    {!isCreateMode && (
+                        <p>
+                            Mã đơn hàng: #{id}
+                        </p>
+                    )}
                 </div>
 
+
+                <div
+                    className={`order-status status-${status}`}
+                >
+                    {status === "draft" &&
+                        "Bản nháp"}
+
+                    {status === "confirmed" &&
+                        "Đã xác nhận"}
+
+                    {status === "stocked" &&
+                        "Đã nhập kho"}
+                </div>
             </div>
 
-
-
             {error && (
-                <div className="purchase-order-error">
+                <div className="purchase-alert error">
                     {error}
                 </div>
             )}
 
+            {success && (
+                <div className="purchase-alert success">
+                    {success}
+                </div>
+            )}
 
-            <section className="purchase-order-section">
+            <section className="purchase-card">
                 <div className="section-header">
                     <div>
-                        <h2>
-                            Thông tin chung
-                        </h2>
+                        <h2>Thông tin chung</h2>
                         <p>
                             Thông tin cơ bản của đơn mua hàng
                         </p>
@@ -273,108 +493,89 @@ function PurchaseOrderDetail() {
                 </div>
 
 
-                <div className="general-information-grid">
+                <div className="form-grid">
                     <div className="form-group">
                         <label>
                             Nhà cung cấp
-                            <span className="required">
-                                *
-                            </span>
+                            <span>*</span>
                         </label>
 
                         <select
-                            value={supplier}
+                            name="supplier_id"
+                            value={formData.supplier_id}
+                            onChange={handleChange}
                             disabled={isReadOnly}
-                            onChange={(event) =>
-                                setSupplier(event.target.value)
-                            }
                         >
                             <option value="">
-                                Chọn nhà cung cấp
+                                -- Chọn nhà cung cấp --
                             </option>
 
-                            <option value="supplier-1">
-                                Công ty TNHH ABC
-                            </option>
-
-                            <option value="supplier-2">
-                                Công ty XYZ
-                            </option>
-
-                            <option value="supplier-3">
-                                Công ty TNHH Minh Phát
-                            </option>
+                            {suppliers.map((supplier) => (
+                                <option
+                                    key={supplier.id}
+                                    value={supplier.id}
+                                >
+                                    {supplier.supplierName}
+                                </option>
+                            ))}
                         </select>
                     </div>
-
-
 
                     <div className="form-group">
 
                         <label>
                             Nhân viên phụ trách
-                            <span className="required">
-                                *
-                            </span>
+                            <span>*</span>
                         </label>
 
                         <input
-                            type="text"
-                            value={employee}
-                            disabled={isReadOnly}
-                            placeholder="Nhập tên nhân viên phụ trách"
-                            onChange={(event) =>
-                                setEmployee(event.target.value)
+                            type="number"
+                            name="assigned_employee_id"
+                            value={
+                                formData.assigned_employee_id
                             }
+                            onChange={handleChange}
+                            placeholder="Nhập ID nhân viên"
+                            disabled={isReadOnly}
                         />
                     </div>
-
 
                     <div className="form-group">
                         <label>
                             Ngày mua hàng
-                            <span className="required">
-                                *
-                            </span>
+                            <span>*</span>
                         </label>
 
                         <input
                             type="date"
-                            value={orderDate}
+                            name="order_date"
+                            value={formData.order_date}
+                            onChange={handleChange}
                             disabled={isReadOnly}
-                            onChange={(event) =>
-                                setOrderDate(event.target.value)
-                            }
                         />
                     </div>
 
 
-                    <div className="form-group form-group-full">
-                        <label>
-                            Ghi chú
-                        </label>
+                    <div className="form-group full-width">
+                        <label>Ghi chú</label>
 
                         <textarea
-                            value={note}
-                            disabled={isReadOnly}
+                            name="note"
+                            value={formData.note}
+                            onChange={handleChange}
                             placeholder="Nhập ghi chú cho đơn hàng..."
                             rows="4"
-                            onChange={(event) =>
-                                setNote(event.target.value)
-                            }
+                            disabled={isReadOnly}
                         />
                     </div>
                 </div>
             </section>
 
 
-            <section className="purchase-order-section">
+            <section className="purchase-card">
                 <div className="section-header">
                     <div>
-                        <h2>
-                            Chi tiết sản phẩm
-                        </h2>
-
+                        <h2>Chi tiết sản phẩm</h2>
                         <p>
                             Danh sách sản phẩm trong đơn hàng
                         </p>
@@ -384,210 +585,231 @@ function PurchaseOrderDetail() {
                         <button
                             type="button"
                             className="add-item-button"
-                            onClick={handleAddItem}
+                            onClick={addItem}
                         >
-                            <span>+</span>
-                            Thêm sản phẩm
+                            + Thêm sản phẩm
                         </button>
                     )}
-
                 </div>
 
 
-                <div className="order-items-table-wrapper">
-                    <table className="order-items-table">
+                <div className="items-table-wrapper">
+                    <table className="items-table">
                         <thead>
-
                             <tr>
-
-                                <th>
-                                    Mã sản phẩm
-                                </th>
-
-                                <th>
-                                    Tên sản phẩm
-                                </th>
-
-                                <th>
-                                    Số lượng
-                                </th>
-
-                                <th>
-                                    Đơn giá
-                                </th>
-
-                                <th>
-                                    Thành tiền
-                                </th>
-
+                                <th>#</th>
+                                <th>Mã sản phẩm</th>
+                                <th>Tên sản phẩm</th>
+                                <th>Số lượng</th>
+                                <th>Đơn giá</th>
+                                <th>Thành tiền</th>
                                 {!isReadOnly && (
-                                    <th>
-                                        Thao tác
-                                    </th>
+                                    <th></th>
                                 )}
                             </tr>
                         </thead>
 
 
                         <tbody>
-                            {items.map((item) => {
-                                const product =
-                                    getProduct(item.productId);
-                                return (
-                                    <tr key={item.id}>
+                            {items.map((item, index) => (
+                                <tr key={index}>
+
+                                    <td>
+                                        {index + 1}
+                                    </td>
+
+
+                                    <td>
+                                        <select
+                                            value={
+                                                item.product_id
+                                            }
+                                            onChange={(e) =>
+                                                handleProductChange(
+                                                    index,
+                                                    e.target.value
+                                                )
+                                            }
+                                            disabled={isReadOnly}
+                                        >
+                                            <option value="">
+                                                Chọn sản phẩm
+                                            </option>
+
+                                            {products.map(
+                                                (product) => (
+                                                    <option
+                                                        key={product.id}
+                                                        value={product.id}
+                                                    >
+                                                        {product.productCode}
+                                                    </option>
+                                                )
+                                            )}
+
+                                        </select>
+                                    </td>
+
+
+                                    <td>
+                                        <input
+                                            type="text"
+                                            value={
+                                                item.product_name
+                                            }
+                                            placeholder="Tự động"
+                                            readOnly
+                                        />
+                                    </td>
+
+
+                                    <td>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={item.quantity}
+                                            onChange={(e) =>
+                                                handleItemChange(
+                                                    index,
+                                                    "quantity",
+                                                    e.target.value
+                                                )
+                                            }
+                                            disabled={isReadOnly}
+                                        />
+                                    </td>
+
+
+                                    <td>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={item.unit_price}
+                                            onChange={(e) =>
+                                                handleItemChange(
+                                                    index,
+                                                    "unit_price",
+                                                    e.target.value
+                                                )
+                                            }
+                                            disabled={isReadOnly}
+                                        />
+                                    </td>
+
+                                    <td className="item-total">
+
+                                        {formatCurrency(
+                                            calculateItemTotal(item)
+                                        )}{" "}
+                                        ₫
+
+                                    </td>
+
+                                    {!isReadOnly && (
                                         <td>
-                                            <select
-                                                value={item.productId}
-                                                disabled={isReadOnly}
-                                                onChange={(event) =>
-                                                    handleProductChange(
-                                                        item.id,
-                                                        event.target.value
-                                                    )
+                                            <button
+                                                type="button"
+                                                className="remove-item-button"
+                                                onClick={() =>
+                                                    removeItem(index)
+                                                }
+                                                disabled={
+                                                    items.length === 1
                                                 }
                                             >
-                                                <option value="">
-                                                    Chọn sản phẩm
-                                                </option>
-
-                                                {PRODUCT_LIST.map(
-                                                    (product) => (
-                                                        <option key={product.id} value={product.id}>
-                                                            {product.code}
-                                                        </option>
-                                                    )
-                                                )}
-
-                                            </select>
-
+                                                ×
+                                            </button>
                                         </td>
-
-                                        <td>
-                                            <input
-                                                type="text"
-                                                value={
-                                                    product?.name || ""
-                                                }
-                                                placeholder="Tự động điền"
-                                                readOnly
-                                            />
-
-                                        </td>
-
-
-                                        <td>
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                value={item.quantity}
-                                                disabled={isReadOnly}
-                                                onChange={(event) =>
-                                                    handleQuantityChange(
-                                                        item.id,
-                                                        event.target.value
-                                                    )
-                                                }
-                                            />
-                                        </td>
-
-                                        <td>
-                                            <input
-                                                type="number"
-                                                min="0"
-                                                value={item.unitPrice}
-                                                disabled={isReadOnly}
-                                                onChange={(event) =>
-                                                    handlePriceChange(
-                                                        item.id,
-                                                        event.target.value
-                                                    )
-                                                }
-                                            />
-                                        </td>
-
-
-                                        <td className="item-total">
-
-                                            {formatCurrency(
-                                                calculateItemTotal(item)
-                                            )}
-                                        </td>
-
-                                        {!isReadOnly && (
-
-                                            <td>
-
-                                                <button
-                                                    type="button"
-                                                    className="delete-item-button"
-                                                    onClick={() =>
-                                                        handleDeleteItem(
-                                                            item.id
-                                                        )
-                                                    }
-                                                    disabled={
-                                                        items.length === 1
-                                                    }
-                                                >
-                                                    Xóa
-                                                </button>
-                                            </td>
-                                        )}
-                                    </tr>
-                                );
-                            })}
+                                    )}
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
                 </div>
+
             </section>
 
-            <section className="purchase-order-summary">
-                <div className="summary-label">
-                    Tổng tiền đơn hàng
+
+            <section className="purchase-summary">
+
+                <div>
+                    <span>
+                        Tổng số lượng
+                    </span>
+
+                    <strong>
+                        {items.reduce(
+                            (total, item) =>
+                                total +
+                                Number(
+                                    item.quantity || 0
+                                ),
+                            0
+                        )}
+                    </strong>
                 </div>
+
+
                 <div className="summary-total">
-                    {formatCurrency(totalAmount)}
+                    <span>
+                        Tổng tiền đơn hàng
+                    </span>
+
+                    <strong>
+                        {formatCurrency(totalCost)} ₫
+                    </strong>
                 </div>
             </section>
 
 
-            <div className="purchase-order-actions">
-
-                <button  type="button"  className="back-button"  onClick={handleBack}>                   
+            <div className="purchase-actions">
+                <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() =>
+                        navigate("/purchase-orders")
+                    }
+                >
                     Quay về danh sách
                 </button>
+
+
                 <div className="action-right">
                     {status === "draft" && (
-
                         <>
                             <button
                                 type="button"
                                 className="save-button"
                                 onClick={handleSave}
+                                disabled={loading}
                             >
                                 Lưu lại
                             </button>
 
-                            <button
-                                type="button"
-                                className="confirm-button"
-                                onClick={handleConfirm}
-                            >
-                                Xác nhận đơn hàng
-                            </button>
+
+                            {!isCreateMode && (
+                                <button
+                                    type="button"
+                                    className="confirm-button"
+                                    onClick={handleConfirm}
+                                    disabled={loading}
+                                >
+                                    Xác nhận đơn hàng
+                                </button>
+                            )}
+
                         </>
 
                     )}
 
 
-                    {/* CONFIRMED */}
-
                     {status === "confirmed" && (
 
                         <button
                             type="button"
-                            className="stock-button"
-                            onClick={handleStock}
+                            className="receive-button"
+                            onClick={handleReceive}
+                            disabled={loading}
                         >
                             Xác nhận nhập kho
                         </button>
