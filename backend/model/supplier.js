@@ -4,7 +4,8 @@ module.exports = (sequelize, DataTypes) => {
     class Supplier extends Model {
         static associate(models) {
             models.Supplier.hasMany(models.PurchaseOrder, {
-                 foreignKey: 'supplier_id' 
+                    foreignKey: 'supplier_id',
+                    as: 'purchaseOrders'
                 });
         }
     }
@@ -25,7 +26,7 @@ module.exports = (sequelize, DataTypes) => {
         },
     }, {
         sequelize,
-        moduleName: "Supplier",
+        modelName: "Supplier",
         tableName: "Suppliers", // ten bang trong mysql
         timestamps: false, // create at update at
     })

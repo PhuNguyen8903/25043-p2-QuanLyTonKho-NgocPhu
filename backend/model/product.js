@@ -44,7 +44,6 @@ module.exports = (sequelize, DataTypes) => {
         timestamps: true, // create at update at
         createdAt: 'created_at',
         updatedAt: 'updated_at'
-
     })
     return Product;
 }
