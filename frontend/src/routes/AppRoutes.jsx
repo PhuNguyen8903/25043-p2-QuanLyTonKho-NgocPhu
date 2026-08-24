@@ -3,15 +3,8 @@ import Login from "../pages/Login/Login";
 import MainLayout from "../components/layout/MainLayout";
 import PurchaseOrders from "../pages/PurchaseOrders/PurchaseOrders"
 import PurchaseOrderDetail from "../pages/PurchaseOrderDetail/PurchaseOrderDetail";
-
-
-function Products() {
-  return <h2>Danh sách Sản phẩm</h2>;
-}
-
-function Suppliers() {
-  return <h2>Danh sách Nhà cung cấp</h2>;
-}
+import Products from "../pages/Products/Products";
+import Suppliers from "../pages/Suppliers/Suppliers"
 
 function Inventory() {
   return <h2>Quản lý Tồn kho</h2>;
@@ -30,7 +23,11 @@ function AppRoutes() {
         <Route path="/purchaseorders/create" element={<PurchaseOrderDetail />} />
         <Route path="/purchaseorders/:id" element={<PurchaseOrderDetail />} />
         <Route path="/products" element={<Products />} />
+        {/* <Route path="/products/create" element={<ProductDetail />} />
+        <Route path="/products/:id" element={<ProductDetail />} /> */}
         <Route path="/suppliers" element={<Suppliers />} />
+        {/* <Route path="/suppliers/create" element={<SupplierDetail />} /> */}
+        {/* <Route path="/suppliers/:id" element={<SupplierDetail />} /> */}
         <Route path="/inventory" element={<Inventory />} />
         <Route path="/pos" element={<POS />} />
       </Route>

@@ -243,11 +243,31 @@ exports.getOrdersbyId = async (req, res, next) => {
 
         const purOrder = await PurchaseOrder.findByPk(purchase_order_id, {
             include: [
-                { model: PurchaseOrderItem, as: 'items' },
-                { model: Supplier, as: 'supplier' },
-                { model: User, as: 'assignedEmployee' },
+                {
+                    model: PurchaseOrderItem,
+                    as: 'items',
+                    include: [
+                        {
+                            model: Product,
+                            as: 'product',
+                            attributes: ['id', 'productsCode', 'productsName', 'unit', 'price'],
+                        }
+                    ]
+                },
+                {
+                    model: Supplier,
+                    as: 'supplier'
+                },
+                {
+                    model: User,
+                    as: 'assignedEmployee',
+                    attributes: ['id', 'fullName', 'username']
+                }
             ]
-        })
+        });
+        if (!purOrder) {
+            return res.status(404).json({ message: "loi ko tim duoc order" })
+        }
         res.status(200).json(purOrder);
     } catch (error) {
         next(error)

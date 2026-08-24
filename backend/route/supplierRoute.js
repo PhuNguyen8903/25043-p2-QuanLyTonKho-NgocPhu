@@ -2,7 +2,7 @@ const express = require('express');
 const { getSuppliers, getSupplierById, createSupplier, updateSupplier, deleteSupplier} = require('../controller/supplierController');
 const { createSupplierValidator, updateSupplierValidator } = require('../validator/supplierValidator');
 const handlerValidation = require('../middleware/validateErrorHandler');
-const requireRole = require('../middleware/requireRole');
+const authorize = require('../middleware/authorize');
 const router = express.Router();
 
 router.get("/", 
@@ -26,7 +26,7 @@ router.put("/:id",
 );
 
 router.delete("/:id", 
-    requireRole("admin"), 
+    authorize("admin"), 
     deleteSupplier
 );
 
