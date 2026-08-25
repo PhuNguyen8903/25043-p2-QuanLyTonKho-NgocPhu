@@ -1,0 +1,164 @@
+.supplier-detail-page {
+    padding: 2rem;
+}
+
+.supplier-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.supplier-detail-header h1 {
+    margin: 0.75rem 0 0.25rem;
+    font-size: 1.8rem;
+}
+
+.supplier-detail-header p {
+    margin: 0;
+    color: #6b7280;
+}
+
+.back-button {
+    border: none;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    color: #4b5563;
+    font-size: 0.95rem;
+}
+
+.back-button:hover {
+    color: #111827;
+}
+
+.supplier-card {
+    background: #fff;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.06);
+}
+
+.section-header {
+    margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+    margin: 0 0 0.35rem;
+    font-size: 1.2rem;
+}
+
+.section-header p {
+    margin: 0;
+    color: #6b7280;
+}
+
+.supplier-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    font-weight: 600;
+}
+
+.form-group label span {
+    color: #dc2626;
+    margin-left: 0.25rem;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    outline: none;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: #2563eb;
+}
+
+.form-group textarea {
+    resize: vertical;
+}
+
+.supplier-alert {
+    margin-bottom: 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 0.5rem;
+}
+
+.supplier-alert.error {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.supplier-alert.success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.supplier-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+}
+
+.action-right {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.secondary-button,
+.save-button,
+.delete-button {
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.7rem 1.2rem;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.secondary-button {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.save-button {
+    background: #2563eb;
+    color: white;
+}
+
+.delete-button {
+    background: #dc2626;
+    color: white;
+}
+
+.secondary-button:disabled,
+.save-button:disabled,
+.delete-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.supplier-detail-loading {
+    padding: 3rem;
+    text-align: center;
+}

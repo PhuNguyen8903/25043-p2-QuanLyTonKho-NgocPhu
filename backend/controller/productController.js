@@ -101,8 +101,12 @@ exports.deleteProduct =async (req,res,next)=>{
             return res.status(403).json({ message: 'Bạn không có quyền xoa bài viết này.' });
         }
 
-        await product.destroy()
+        const hasOrders = await PurchaseOrder.findOne({ where: { product_id: productId } });
+        if (hasOrders) {
+            return res.status(400).json({ message: "Không thể xoá nhà cung cấp đã có đơn mua hàng" });
+        }
 
+        await product.destroy()
         res.status(204).send()
     } catch (error) {
         next(error)
