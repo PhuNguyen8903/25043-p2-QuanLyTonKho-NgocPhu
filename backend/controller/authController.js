@@ -84,7 +84,18 @@ exports.logout = async (req, res, next) => {
 
 
 exports.getMe = async (req, res, next) => {
-    res.json({
-        user: req.user
-    })
-}
+    try {
+        if (!req.session.userId) {
+            return res.status(401).json({ message: "Chưa đăng nhập" });
+        }
+
+        const user = await User.findByPk(req.session.userId);
+        if (!user) {
+            return res.status(404).json({ message: "Không tìm thấy user" });
+        }
+
+        res.status(200).json({ user });
+    } catch (error) {
+        next(error);
+    }
+};

@@ -24,7 +24,7 @@ exports.getProductById = async (req, res, next) => {
             include: [
                 {
                     model: PurchaseOrderItem,
-                    as: 'purchaseOrderItems',
+                    as: 'purchase_order_items',
                     include: [
                         {
                             model: PurchaseOrder,
@@ -58,52 +58,53 @@ exports.createProduct = async (req, res, next) => {
             unit,
             price
         })
-        res.status(201).json(newProduct);   
+        res.status(201).json(newProduct);
     } catch (error) {
         next(error)
     }
 }
 
-exports.updateProduct = async(req,res,next)=>{
+exports.updateProduct = async (req, res, next) => {
     try {
         const productId = parseInt(req.params.id);
         const { productsName, unit, price } = req.body;
-        if(!productId)
-            return res.status(404).json({message:"ko tim thay id san pham"})
+        if (!productId)
+            return res.status(404).json({ message: "ko tim thay id san pham" })
 
         const product = await Product.findByPk(productId);
-        if(!product)
-            return res.status(401).json({message:"ko tim thay san pham"})
+        if (!product)
+            return res.status(401).json({ message: "ko tim thay san pham" })
 
         await product.update({
             productsName,
             unit,
             price
         })
-        res.status(200).json({message:"update thanh cong"})
+        res.status(200).json({ message: "update thanh cong" })
     } catch (error) {
         next(error)
     }
 }
 
-exports.deleteProduct =async (req,res,next)=>{
+exports.deleteProduct = async (req, res, next) => {
     try {
         const productId = parseInt(req.params.id);
-        if(!productId)
-            return res.status(404).json({message:"ko tim thay id san pham"})
+        if (!productId)
+            return res.status(404).json({ message: "ko tim thay id san pham" })
 
         const product = await Product.findByPk(productId);
-        if(!product)
-            return res.status(401).json({message:"ko tim thay san pham"})
+        if (!product)
+            return res.status(401).json({ message: "ko tim thay san pham" })
 
+        console.log(product);
         const isAdmin = req.session.userRole === "admin";
         if (!isAdmin) {
             return res.status(403).json({ message: 'Bạn không có quyền xoa bài viết này.' });
         }
 
-        const hasOrders = await PurchaseOrder.findOne({ where: { product_id: productId } });
-        if (hasOrders) {
-            return res.status(400).json({ message: "Không thể xoá nhà cung cấp đã có đơn mua hàng" });
+        const hasBeenUsed = await PurchaseOrderItem.findOne({ where: { product_id: productId } });
+        if (hasBeenUsed) {
+            return res.status(400).json({ message: "Không thể xoá sản phẩm đã từng xuất hiện trong đơn mua hàng" });
         }
 
         await product.destroy()

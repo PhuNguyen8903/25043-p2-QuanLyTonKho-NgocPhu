@@ -1,20 +1,18 @@
+const authorize = (allowedRoles) => {
+    const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
 
-const authorize = (allowedRoles) =>{
-    const role = Array.isArray(allowedRoles)? allowedRoles : [allowedRoles];
-
-    return (req,res,next) =>{
-        if(!req.session.userid || !req.session.role){
-            return res.status(403).json({ messae: "ko the xac dinh vai tro nguoi dungg" })
-
+    return (req, res, next) => {
+        if (!req.session.userId || !req.session.userRole) {
+            return res.status(401).json({ message: "Không xác định được vai trò người dùng" });
         }
 
-        const userRole = req.session.role;
-        if(!role.includes(userRole)){
-            return res.status(403).json({messae:"ban ko co quyen"})
+        const userRole = req.session.userRole;
+        if (!roles.includes(userRole)) {
+            return res.status(403).json({ message: "Bạn không có quyền thực hiện thao tác này" });
         }
 
-        next()
-    }
-}
+        next();
+    };
+};
 
 module.exports = authorize;

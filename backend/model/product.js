@@ -4,11 +4,13 @@ module.exports = (sequelize, DataTypes) => {
     class Product extends Model {
         static associate(models) {
             models.Product.hasMany(models.PurchaseOrderItem, {
-                 foreignKey: 'product_id' 
+                 foreignKey: 'product_id',
+                 as:'purchase_order_items'
                 });
                 
             models.Product.hasMany(models.SalesOrderItem, {
-                 foreignKey: 'product_id' 
+                 foreignKey: 'product_id' ,
+                 as: 'sale_order_items'
                 });
         }
     }
