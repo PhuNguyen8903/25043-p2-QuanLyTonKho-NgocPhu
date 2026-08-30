@@ -1,3 +1,4 @@
+const { Op, where } = require("sequelize");
 const { Product, PurchaseOrderItem, Supplier, PurchaseOrder } = require("../model");
 
 
@@ -109,6 +110,30 @@ exports.deleteProduct = async (req, res, next) => {
 
         await product.destroy()
         res.status(204).send()
+    } catch (error) {
+        next(error)
+    }
+}
+
+
+exports.searchProduct = async (req, res, next) => {
+    try {
+        const search = req.query.search || "";
+        const where = {};
+        if (search) {
+            where[Op.or] = [
+                { productsCode: { [Op.like]: `%${search}%` } },
+                { productsName: { [Op.like]: `%${search}%` } }
+            ];
+        }
+        const products = await Product.findAll({
+            where,
+            attributes: ['id', 'productsCode', 'productsName', 'stock_quantity'],
+        });
+        if (!products) {
+            return res.status(400).json({ message: "ko co product" })
+        }
+        res.status(200).json(products)
     } catch (error) {
         next(error)
     }

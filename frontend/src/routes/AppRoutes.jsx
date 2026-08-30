@@ -7,10 +7,8 @@ import Products from "../pages/Products/Products";
 import Suppliers from "../pages/Suppliers/Suppliers";
 import ProductDetail from "../pages/ProductDetail/ProductDetail";
 import SupplierDetail from "../pages/SupplierDetail/SupplierDetail";
+import Inventory from "../pages/Inventory/Inventory";
 
-function Inventory() {
-  return <h2>Quản lý Tồn kho</h2>;
-}
 
 function POS() {
   return <h2>POS</h2>;

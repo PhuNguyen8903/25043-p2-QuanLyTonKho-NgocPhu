@@ -24,3 +24,13 @@ export const deleteProduct = async (id) => {
     const res = await api.delete(`/api/product/${id}`);
     return res.data;
 };
+
+export const searchProducts = async (search = "") => {
+    const res = await api.get("/api/product/search", {
+        params: {
+            search,
+        },
+    });
+
+    return res.data;
+};

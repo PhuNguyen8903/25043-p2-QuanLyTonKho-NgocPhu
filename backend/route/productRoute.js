@@ -5,6 +5,7 @@ const {
     createProduct,
     updateProduct,
     deleteProduct,
+    searchProduct,
 } = require('../controller/productController');
 const { createProductValidator, updateProductValidator } = require('../validator/productValidator');
 const handlerValidation = require('../middleware/validateErrorHandler');
@@ -15,15 +16,23 @@ router.get("/",
     getProduct
 );
 
+router.get("/search", 
+    searchProduct
+);
+
 router.get("/:id", 
     getProductById
 );
+
 
 router.post("/", 
     createProductValidator(), 
     handlerValidation, 
     createProduct
 );
+
+
+
 
 
 router.put("/:id", 
