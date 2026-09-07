@@ -12,6 +12,7 @@ const userRoute = require("./route/userRoute.js");
 const productRoute = require("./route/productRoute.js")
 const purchaseRoute = require("./route/purchaseRoute.js");
 const supplierRoute = require("./route/supplierRoute.js");
+const posRoute = require("./route/posRoute.js");
 const requestLoggerMiddleware = require("./middleware/reqLogger.js")
 const errorHandleMiddleware = require("./middleware/errorHandler.js")
 const db = require("./model/index.js")
@@ -25,8 +26,10 @@ app.use(
         credentials: true
     })
 );
+
 app.use(express.json()); // convert body to json
 app.use(cookieParser());
+
 const dbConfig = config[config.env]
 const sessionStoreOptions = {
     host: dbConfig.host,
@@ -59,7 +62,7 @@ app.use("/api/user",userRoute);
 app.use("/api/purchase",purchaseRoute);
 app.use("/api/product",productRoute);
 app.use("/api/supplier", supplierRoute);
-
+app.use("/api/pos",posRoute);
 
 app.use(errorHandleMiddleware)
 
