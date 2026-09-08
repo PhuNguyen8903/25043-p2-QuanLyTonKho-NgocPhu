@@ -8,11 +8,9 @@ import Suppliers from "../pages/Suppliers/Suppliers";
 import ProductDetail from "../pages/ProductDetail/ProductDetail";
 import SupplierDetail from "../pages/SupplierDetail/SupplierDetail";
 import Inventory from "../pages/Inventory/Inventory";
-
-
-function POS() {
-  return <h2>POS</h2>;
-}
+import POS from "../pages/POS/POS";
+import SaleOrders from "../pages/POS/SaleOrders";
+import SaleOrderDetail from "../pages/POS/SaleOrderDetail";
 
 function AppRoutes() {
   return (
@@ -30,6 +28,8 @@ function AppRoutes() {
         <Route path="/suppliers/:id" element={<SupplierDetail />} />
         <Route path="/inventory" element={<Inventory />} />
         <Route path="/pos" element={<POS />} />
+        <Route path="/saleorders" element ={<SaleOrders/>}/>
+        <Route path="/saleorders/:id"element={<SaleOrderDetail />}/>
       </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} /></Routes>

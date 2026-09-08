@@ -1,15 +1,35 @@
 const { Op } = require("sequelize");
-const { salesOrderItem, SalesOrder, User, Product, SalesOrderItem } = require("../model");
+const { SalesOrder, User, Product, SalesOrderItem } = require("../model");
 
 
 exports.CreateSaleOrder = async (req, res, next) => {
     try {
-        const { assigned_employee_id,customer_name,customer_phone,amount_paid, payment_method,items } = req.body;
+        const { customer_name, customer_phone, amount_paid, payment_method, items } = req.body;
         const user_Id = req.session.userId;
-        
-        const employee = await User.findByPk(assigned_employee_id);
+        const employee = await User.findByPk(user_Id);
         if (!employee) {
             return res.status(404).json({ message: "nhân viên ko tồn tại" });
+        }
+        if (!items || items.length === 0) {
+            return res.status(400).json({ message: "gio hang ko duoc trong" })
+        }
+        // lap qua san pham trong gio hang
+        for (const item of items) {
+            //tim san pham trong gio
+            const product = await Product.findByPk(item.product_id);
+            if (!product) {
+                return res.status(404).json({ message: `ko tim thay san pham: ${item.product_id}` });
+            }
+            if (item.quantity <= 0) {
+                return res.status(400).json({ message: `so luong san pham ${item.product_id} ko hop le` });
+            }
+            if (item.quantity > product.stock_quantity) {
+                return res.status(400).json({ message: `san pham ${product.productsName} chi con ${product.stock_quantity}` })
+            }
+        }
+        
+        if(payment_method === "tranfer"){
+            return res.status(400).json({message: "hien tai chua ho tro phuong thuc thanh toan nay"});
         }
 
         let subtotal = 0;
@@ -23,32 +43,41 @@ exports.CreateSaleOrder = async (req, res, next) => {
         const discount_amount = subtotal * (discountPercent / 100);
         const total_amount = subtotal - discount_amount;
         const change_amount = amount_paid - total_amount;
-
+        if (change_amount < 0) {
+            return res.status(400).json({ message: "chua du tien thanh toan" })
+        }
+        
         const saleCode = `SO${Date.now()}`;
 
         const newSaleOrder = await SalesOrder.create({
             saleCode,
             customer_name,
             customer_phone,
-            assigned_employee_id,
+            assigned_employee_id: user_Id,
             subtotal,
             discount_amount,
             total_amount,
             amount_paid,
             change_amount,
             payment_method,
-            status:"paid",
+            status: "paid",
             created_by: user_Id,
-            update_by : user_Id,
+            update_by: user_Id,
             items: itemsWithTotal
-        },{
-            include:[{
+        }, {
+            include: [{
                 model: SalesOrderItem,
                 as: 'items'
             }]
         });
+        // tru ton kho 
+        for (const item of items) {
+            await Product.decrement({ stock_quantity: item.quantity },
+                { where: { id: item.product_id } }
+            )
+        };
         res.status(201).json(newSaleOrder);
-        
+
     } catch (error) {
         next(error)
     }
@@ -59,11 +88,11 @@ exports.CreateSaleOrder = async (req, res, next) => {
 exports.getSaleOrder = async (req, res, next) => {
     try {
         const pageSize = parseInt(req.query.limit) || 10;
-        const currentPage = parent(req.query.page) || 1;
+        const currentPage = parseInt(req.query.page) || 1;
         const search = req.query.search || "";
         const where = {};
         if (search) {
-            //tim ma đơn bán trung voi search
+            //tim người bán trung voi search
             const matchedEmployee = await User.findAll({
                 where: { username: { [Op.like]: `%${search}%` } },
                 attributes: ['id']
@@ -71,7 +100,7 @@ exports.getSaleOrder = async (req, res, next) => {
             const userId = matchedEmployee.map(u => u.id);
             where[Op.or] = [
                 { saleCode: { [Op.like]: `%${search}%` } },
-                { user_Id: { [Op.in]: userId } }
+                { assigned_employee_id: { [Op.in]: userId } }
             ]
         }
         const getOrder = await SalesOrder.findAndCountAll({
@@ -86,9 +115,6 @@ exports.getSaleOrder = async (req, res, next) => {
             limit: pageSize,
             offset: (currentPage - 1) * pageSize
         });
-        if (!getOrder) {
-            return res.status(401).json({ message: "ko tim thay don hang" });
-        }
         res.json({ data: getOrder.rows, total: getOrder.count });;
     } catch (error) {
         next(error);
@@ -100,7 +126,7 @@ exports.getDetailSaleOrder = async (req, res, next) => {
         const saleOrderId = parseInt(req.params.id);
         const saleOrder = await SalesOrder.findByPk(saleOrderId, {
             include: [{
-                model: salesOrderItem,
+                model: SalesOrderItem,
                 as: "items",
                 include: [{
                     model: Product,

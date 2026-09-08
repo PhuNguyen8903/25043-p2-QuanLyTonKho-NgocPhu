@@ -1,0 +1,318 @@
+.sale-detail-page {
+    width: 100%;
+    padding: 1.5rem 2rem 2rem;
+    box-sizing: border-box;
+}
+
+
+
+.sale-detail-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    margin-bottom: 1.5rem;
+}
+
+.sale-detail-header h1 {
+    margin: 0.75rem 0 0;
+
+    color: #1f2937;
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+.sale-detail-header p {
+    margin: 0.4rem 0 0;
+
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+
+
+.back-button {
+    padding: 0;
+
+    border: none;
+    background: transparent;
+
+    color: #2563eb;
+
+    font-size: 0.9rem;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.back-button:hover {
+    color: #1d4ed8;
+}
+
+
+
+.sale-detail-status {
+    display: inline-flex;
+    align-items: center;
+
+    margin-top: 0.25rem;
+    padding: 0.45rem 0.85rem;
+
+    border-radius: 999px;
+
+    background: #dcfce7;
+    color: #15803d;
+
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+
+.sale-detail-card {
+    margin-bottom: 1.25rem;
+    padding: 1.5rem;
+
+    background: #ffffff;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+}
+
+.section-header {
+    margin-bottom: 1.25rem;
+}
+
+.section-header h2 {
+    margin: 0;
+
+    color: #1f2937;
+
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+
+
+.sale-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 1.25rem 2rem;
+}
+
+.sale-info-grid > div {
+    display: flex;
+    flex-direction: column;
+
+    gap: 0.35rem;
+}
+
+.sale-info-grid span {
+    color: #6b7280;
+
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.sale-info-grid strong {
+    color: #1f2937;
+
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+
+
+.sale-items-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.sale-items-table {
+    width: 100%;
+    min-width: 800px;
+
+    border-collapse: collapse;
+}
+
+.sale-items-table thead {
+    background: #f9fafb;
+}
+
+.sale-items-table th {
+    padding: 0.85rem 0.9rem;
+
+    border-bottom: 1px solid #e5e7eb;
+
+    color: #6b7280;
+
+    font-size: 0.76rem;
+    font-weight: 700;
+
+    text-align: left;
+    text-transform: uppercase;
+}
+
+.sale-items-table td {
+    padding: 0.9rem;
+
+    border-bottom: 1px solid #f1f5f9;
+
+    color: #374151;
+
+    font-size: 0.88rem;
+}
+
+.sale-items-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.sale-items-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+
+
+.sale-payment-card {
+    width: 100%;
+    max-width: 32rem;
+
+    margin-left: auto;
+    margin-bottom: 1.5rem;
+
+    padding: 1.5rem;
+
+    box-sizing: border-box;
+
+    background: #ffffff;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+}
+
+.sale-payment-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0.65rem 0;
+
+    color: #4b5563;
+
+    font-size: 0.9rem;
+}
+
+.sale-payment-row strong {
+    color: #1f2937;
+
+    font-weight: 600;
+}
+
+.sale-payment-row.total {
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+
+    border-top: 1px solid #e5e7eb;
+}
+
+.sale-payment-row.total span {
+    color: #111827;
+
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.sale-payment-row.total strong {
+    color: #2563eb;
+
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+
+
+.sale-detail-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.sale-detail-actions button {
+    padding: 0.65rem 1rem;
+
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+
+    background: #ffffff;
+
+    color: #374151;
+
+    font-size: 0.9rem;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.sale-detail-actions button:hover {
+    background: #f9fafb;
+}
+
+
+.sale-detail-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 20rem;
+
+    color: #6b7280;
+
+    font-size: 0.95rem;
+}
+
+
+.sale-detail-error {
+    margin-bottom: 1rem;
+    padding: 0.85rem 1rem;
+
+    border: 1px solid #fecaca;
+    border-radius: 0.5rem;
+
+    background: #fef2f2;
+
+    color: #dc2626;
+
+    font-size: 0.9rem;
+}
+
+
+
+@media screen and (max-width: 768px) {
+    .sale-detail-page {
+        padding: 1rem;
+    }
+
+    .sale-detail-header {
+        gap: 1rem;
+        flex-direction: column;
+    }
+
+    .sale-detail-header h1 {
+        font-size: 1.4rem;
+    }
+
+    .sale-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sale-payment-card {
+        max-width: none;
+    }
+
+    .sale-detail-actions {
+        justify-content: stretch;
+    }
+
+    .sale-detail-actions button {
+        width: 100%;
+    }
+}

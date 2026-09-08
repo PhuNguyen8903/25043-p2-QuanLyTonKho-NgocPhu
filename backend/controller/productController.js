@@ -128,7 +128,7 @@ exports.searchProduct = async (req, res, next) => {
         }
         const products = await Product.findAll({
             where,
-            attributes: ['id', 'productsCode', 'productsName', 'stock_quantity'],
+            attributes: ['id', 'productsCode', 'productsName',"unit","price", 'stock_quantity'],
         });
         if (!products) {
             return res.status(400).json({ message: "ko co product" })

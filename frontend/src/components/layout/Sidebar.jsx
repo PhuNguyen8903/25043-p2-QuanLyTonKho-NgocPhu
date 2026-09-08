@@ -53,6 +53,15 @@ function Sidebar() {
         >
           <span>POS</span>
         </NavLink>
+
+        <NavLink
+          to="/saleorders"
+          className={({ isActive }) =>
+            `sidebar-link ${isActive ? "active" : ""}`
+          }
+        >
+          <span>saleorders</span>
+        </NavLink>
       </nav>
     </aside>
   );
