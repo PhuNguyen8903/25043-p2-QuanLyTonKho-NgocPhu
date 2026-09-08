@@ -193,7 +193,7 @@ function ProductDetail() {
                         className="back-button"
                         onClick={() => navigate("/products")}
                     >
-                        ← Quay về danh sách
+                        ← 
                     </button>
 
                     <h1>

@@ -5,20 +5,47 @@ import "./Inventory.css";
 function Inventory() {
     const [searchInput, setSearchInput] = useState("");
     const [search, setSearch] = useState("");
-
     const [products, setProducts] = useState([]);
+    const [totalProducts, setTotalProducts] = useState(0);
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 10;
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    const fetchProducts = async (keyword = "") => {
+    const fetchProducts = async (
+        keyword = "",
+        page = 1
+    ) => {
         try {
             setLoading(true);
             setError("");
-            const data = await searchProducts(keyword);
-            setProducts(data || []);
+
+            const result = await searchProducts(
+                keyword,
+                page,
+                pageSize
+            );
+
+            setProducts(
+                Array.isArray(result?.data)
+                    ? result.data
+                    : []
+            );
+
+            setTotalProducts(
+                Number(result?.total) || 0
+            );
+
+            setCurrentPage(page);
         } catch (error) {
-            console.error("Search products error:", error);
+            console.error(
+                "Search products error:",
+                error
+            );
+
             setProducts([]);
+            setTotalProducts(0);
+
             setError(
                 error.response?.data?.message ||
                 "Không thể tải dữ liệu tồn kho."
@@ -29,12 +56,15 @@ function Inventory() {
     };
 
     useEffect(() => {
-        fetchProducts("");
+        fetchProducts("", 1);
     }, []);
 
     const handleSearch = () => {
-        setSearch(searchInput);
-        fetchProducts(searchInput);
+        const keyword = searchInput.trim();
+
+        setSearch(keyword);
+
+        fetchProducts(keyword, 1);
     };
 
     const handleSearchKeyDown = (event) => {
@@ -43,18 +73,38 @@ function Inventory() {
         }
     };
 
+    const totalPages = Math.ceil(
+        totalProducts / pageSize
+    );
+
+    const handlePageChange = (page) => {
+        if (
+            page < 1 ||
+            page > totalPages ||
+            loading
+        ) {
+            return;
+        }
+
+        fetchProducts(
+            search,
+            page
+        );
+    };
+
     return (
         <div className="inventory-page">
-
             <div className="inventory-header">
                 <div>
-                    <h1>Tra cứu Tồn kho</h1>
+                    <h1>
+                        Tra cứu Tồn kho
+                    </h1>
+
                     <p>
                         Kiểm tra số lượng tồn kho của sản phẩm
                     </p>
                 </div>
             </div>
-
 
             <div className="inventory-filter">
                 <div className="inventory-search-group">
@@ -68,10 +118,15 @@ function Inventory() {
                         value={searchInput}
                         placeholder="Nhập mã hoặc tên sản phẩm..."
                         onChange={(event) =>
-                            setSearchInput(event.target.value)
+                            setSearchInput(
+                                event.target.value
+                            )
                         }
-                        onKeyDown={handleSearchKeyDown}
+                        onKeyDown={
+                            handleSearchKeyDown
+                        }
                     />
+
                 </div>
 
                 <button
@@ -80,7 +135,9 @@ function Inventory() {
                     onClick={handleSearch}
                     disabled={loading}
                 >
-                    {loading ? "Đang tìm..." : "Tìm kiếm"}
+                    {loading
+                        ? "Đang tìm..."
+                        : "Tìm kiếm"}
                 </button>
             </div>
 
@@ -90,19 +147,27 @@ function Inventory() {
                 </div>
             )}
 
-
             <div className="inventory-table-container">
                 <table className="inventory-table">
                     <thead>
                         <tr>
-                            <th>Mã sản phẩm</th>
-                            <th>Tên sản phẩm</th>
-                            <th>Số lượng tồn kho</th>
+                            <th>
+                                Mã sản phẩm
+                            </th>
+
+                            <th>
+                                Tên sản phẩm
+                            </th>
+
+                            <th>
+                                Số lượng tồn kho
+                            </th>
                         </tr>
                     </thead>
 
                     <tbody>
-                        {loading ?(
+
+                        {loading ? (
                             <tr>
                                 <td
                                     colSpan="3"
@@ -111,7 +176,7 @@ function Inventory() {
                                     Đang tải dữ liệu...
                                 </td>
                             </tr>
-                        ):products.length === 0 ? (
+                        ) : products.length === 0 ? (
                             <tr>
                                 <td
                                     colSpan="3"
@@ -120,43 +185,115 @@ function Inventory() {
                                     Không tìm thấy sản phẩm.
                                 </td>
                             </tr>
-                        ):(
-                            products.map((product) => (
-                                <tr key={product.id}>
+                        ) : (
+                            products.map(
+                                (product) => (
+                                    <tr
+                                        key={
+                                            product.id
+                                        }
+                                    >
 
-                                    <td className="inventory-product-code">
-                                        {product.productsCode}
-                                    </td>
+                                        <td className="inventory-product-code">
+                                            {
+                                                product.productsCode
+                                            }
+                                        </td>
 
-                                    <td>
-                                        {product.productsName}
-                                    </td>
+                                        <td>
+                                            {
+                                                product.productsName
+                                            }
+                                        </td>
 
-                                    <td className="inventory-stock">
-                                        {product.stock_quantity}
-                                    </td>
+                                        <td className="inventory-stock">
+                                            {
+                                                product.stock_quantity
+                                            }
+                                        </td>
 
-                                </tr>
-
-                            ))
+                                    </tr>
+                                )
+                            )
                         )}
-                    </tbody>
-                </table>
-            </div>
 
-            {!loading && products.length > 0 && (
-                <div className="inventory-result-count">
-                    Hiển thị{" "}
-                    <strong>{products.length}</strong>{" "}
-                    sản phẩm
-                    {search && (
-                        <>
-                            {" "}cho từ khóa{" "}
-                            <strong>"{search}"</strong>
-                        </>
-                    )}
-                </div>
-            )}
+                    </tbody>
+
+                </table>
+
+                {totalPages > 1 && (
+                    <div className="inventory-pagination">
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                handlePageChange(
+                                    currentPage - 1
+                                )
+                            }
+                            disabled={
+                                currentPage === 1 ||
+                                loading
+                            }
+                        >
+                            ← Trước
+                        </button>
+
+                        <div className="inventory-pagination-info">
+                            Trang{" "}
+                            <strong>
+                                {currentPage}
+                            </strong>{" "}
+                            /{" "}
+                            <strong>
+                                {totalPages}
+                            </strong>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                handlePageChange(
+                                    currentPage + 1
+                                )
+                            }
+                            disabled={
+                                currentPage ===
+                                    totalPages ||
+                                loading
+                            }
+                        >
+                            Sau →
+                        </button>
+
+                    </div>
+                )}
+            </div>
+            {!loading &&
+                totalProducts > 0 && (
+                    <div className="inventory-result-count">
+
+                        Hiển thị{" "}
+                        <strong>
+                            {products.length}
+                        </strong>{" "}
+                        sản phẩm trong tổng số{" "}
+                        <strong>
+                            {totalProducts}
+                        </strong>{" "}
+                        sản phẩm
+
+                        {search && (
+                            <>
+                                {" "}cho từ khóa{" "}
+                                <strong>
+                                    "{search}"
+                                </strong>
+                            </>
+                        )}
+
+                    </div>
+                )}
 
         </div>
     );

@@ -4,11 +4,16 @@ const { Product, PurchaseOrderItem, Supplier, PurchaseOrder } = require("../mode
 
 exports.getProduct = async (req, res, next) => {
     try {
-        const products = await Product.findAll();
+        const pageSize = parseInt(req.query.limit) ||10;
+        const currentPage = parseInt(req.query.page)||1;
+        const products = await Product.findAndCountAll({
+            limit: pageSize,
+            offset:(currentPage-1)*pageSize
+        });
         if (!products) {
             return res.status(400).json({ message: "ko co product" })
         }
-        res.status(200).json(products)
+        res.status(200).json({data: products.rows,total: products.count});
     } catch (error) {
         next(error)
     }
@@ -119,22 +124,37 @@ exports.deleteProduct = async (req, res, next) => {
 exports.searchProduct = async (req, res, next) => {
     try {
         const search = req.query.search || "";
+        const pageSize = parseInt(req.query.limit) || 10;
+        const currentPage = parseInt(req.query.page) || 1;
         const where = {};
+
         if (search) {
             where[Op.or] = [
-                { productsCode: { [Op.like]: `%${search}%` } },
-                { productsName: { [Op.like]: `%${search}%` } }
+                {productsCode: {[Op.like]: `%${search}%`}},
+                {productsName: {[Op.like]: `%${search}%`}}
             ];
         }
-        const products = await Product.findAll({
+
+        const products = await Product.findAndCountAll({
             where,
-            attributes: ['id', 'productsCode', 'productsName',"unit","price", 'stock_quantity'],
+            limit: pageSize,
+            offset: (currentPage - 1) * pageSize,
+            attributes: [
+                "id",
+                "productsCode",
+                "productsName",
+                "unit",
+                "price",
+                "stock_quantity"
+            ]
         });
-        if (!products) {
-            return res.status(400).json({ message: "ko co product" })
-        }
-        res.status(200).json(products)
+
+        res.status(200).json({
+            data: products.rows,
+            total: products.count
+        });
+
     } catch (error) {
-        next(error)
+        next(error);
     }
-}
+};

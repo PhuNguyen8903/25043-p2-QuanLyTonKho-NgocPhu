@@ -61,7 +61,7 @@ function PurchaseOrderDetail() {
 
                 setSuppliers(supplierData || []);
 
-                setProducts(productData || []);
+                setProducts(productData?.data || []);
 
                 setEmployees(employeeData || []);
 
@@ -601,7 +601,7 @@ function PurchaseOrderDetail() {
                             )
                         }
                     >
-                        ← Quay về danh sách
+                        ← 
                     </button>
 
                     <h1>

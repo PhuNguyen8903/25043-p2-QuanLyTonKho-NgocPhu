@@ -1,105 +1,192 @@
 .suppliers-page {
-    padding: 1.5rem;
+    padding: 2rem 2.5rem;
 }
 
 .suppliers-header {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: flex-start;
     margin-bottom: 1.5rem;
 }
 
 .suppliers-header h1 {
     margin: 0;
-    font-size: 1.5rem;
-    color: #111827;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1e293b;
 }
 
 .suppliers-header p {
-    margin: 0.35rem 0 0;
-    color: #6b7280;
-    font-size: 0.875rem;
+    margin: 0.4rem 0 0;
+    color: #64748b;
+    font-size: 0.9rem;
 }
 
-.create-product-button {
+.create-supplier-button {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.5rem;
+
+    height: 2.7rem;
+    padding: 0 1.1rem;
 
     border: none;
-    border-radius: 0.5rem;
+    border-radius: 0.45rem;
 
-    padding: 0.65rem 1rem;
+    background: #334155;
+    color: #ffffff;
 
-    background: #111827;
-    color: white;
-
-    font-size: 0.875rem;
+    font-size: 0.9rem;
     font-weight: 600;
 
     cursor: pointer;
+
+    transition: background 0.15s ease;
 }
 
-.create-product-button span {
-    font-size: 1.1rem;
+.create-supplier-button:hover {
+    background: #1e293b;
+}
+
+.create-supplier-icon {
+    font-size: 1.2rem;
+    font-weight: 400;
+    line-height: 1;
+}
+
+.suppliers-error {
+    padding: 0.8rem 1rem;
+    margin-bottom: 1rem;
+
+    border: 1px solid #fecaca;
+    border-radius: 0.5rem;
+
+    background: #fef2f2;
+    color: #dc2626;
+
+    font-size: 0.85rem;
 }
 
 .suppliers-table-container {
     background: #ffffff;
-    border: 0.0625rem solid #e5e7eb;
-    border-radius: 0.6rem;
-    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.7rem;
+
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 .suppliers-table {
     width: 100%;
+    min-width: 45rem;
+
     border-collapse: collapse;
+    table-layout: fixed;
+
+    font-size: 0.9rem;
 }
 
 .suppliers-table th {
-    text-align: left;
-    padding: 0.85rem 1rem;
-    background: #f9fafb;
-    color: #6b7280;
-    font-size: 0.8rem;
+    padding: 0.9rem 1.1rem;
+
+    background: #f8fafc;
+
+    color: #475569;
+
+    font-size: 0.85rem;
     font-weight: 600;
+
+    text-align: left;
+
+    border-bottom: 1px solid #e2e8f0;
 }
 
 .suppliers-table td {
-    padding: 0.9rem 1rem;
-    border-top: 0.0625rem solid #e5e7eb;
-    color: #374151;
-    font-size: 0.875rem;
+    padding: 0.95rem 1.1rem;
+
+    color: #334155;
+
+    border-bottom: 1px solid #f1f5f9;
 }
 
 .suppliers-table tbody tr {
     cursor: pointer;
-    transition: background 0.15s;
+    transition: background 0.15s ease;
 }
 
 .suppliers-table tbody tr:hover {
-    background: #f9fafb;
+    background: #f8fafc;
 }
 
-.product-code {
-    font-weight: 600;
-    color: #111827;
+.suppliers-table tbody tr:last-child td {
+    border-bottom: none;
 }
 
-.product-price {
+.suppliers-table th:nth-child(1),
+.suppliers-table td:nth-child(1) {
+    width: 30%;
+}
+
+.suppliers-table th:nth-child(2),
+.suppliers-table td:nth-child(2) {
+    width: 20%;
+}
+
+.suppliers-table th:nth-child(3),
+.suppliers-table td:nth-child(3) {
+    width: 50%;
+}
+
+.supplier-name {
     font-weight: 600;
+    color: #2563eb;
 }
 
 .table-message {
+    padding: 3rem 1rem !important;
+
     text-align: center;
-    padding: 2rem !important;
-    color: #6b7280;
+
+    color: #94a3b8 !important;
+
+    cursor: default;
 }
 
-.suppliers-error {
-    margin-bottom: 1rem;
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
-    background: #fef2f2;
-    color: #dc2626;
+.suppliers-table tbody tr:has(.table-message):hover {
+    background: #ffffff;
+}
+
+@media screen and (max-width: 48rem) {
+    .suppliers-page {
+        padding: 1.25rem;
+    }
+
+    .suppliers-header {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .create-supplier-button {
+        align-self: flex-start;
+    }
+}
+
+@media screen and (max-width: 30rem) {
+    .suppliers-page {
+        padding: 1rem;
+    }
+
+    .suppliers-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .suppliers-table {
+        min-width: 40rem;
+    }
+
+    .suppliers-table th,
+    .suppliers-table td {
+        padding: 0.75rem;
+    }
 }

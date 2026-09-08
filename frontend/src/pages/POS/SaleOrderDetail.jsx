@@ -94,7 +94,7 @@ function SaleOrderDetail() {
                             navigate("/saleorders")
                         }
                     >
-                        ← Quay về danh sách
+                        ← 
                     </button>
 
                     <h1>

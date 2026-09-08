@@ -164,33 +164,27 @@ function SupplierDetail() {
 
     return (
         <div className="supplier-detail-page">
-
             <div className="supplier-detail-header">
+                <button
+                    type="button"
+                    className="back-button"
+                    onClick={() => navigate("/suppliers")}
+                >
+                    ←
+                </button>
 
-                <div>
-                    <button
-                        type="button"
-                        className="back-button"
-                        onClick={() => navigate("/suppliers")}
-                    >
-                        ← Quay về danh sách
-                    </button>
+                <h1>
+                    {isCreateMode
+                        ? "Tạo nhà cung cấp"
+                        : "Chi tiết nhà cung cấp"}
+                </h1>
 
-                    <h1>
-                        {isCreateMode
-                            ? "Tạo nhà cung cấp"
-                            : "Chi tiết nhà cung cấp"}
-                    </h1>
-
-                    {!isCreateMode && (
-                        <p>
-                            Mã nhà cung cấp: #{id}
-                        </p>
-                    )}
-                </div>
-
+                {!isCreateMode && (
+                    <p>
+                        Mã nhà cung cấp: #{id}
+                    </p>
+                )}
             </div>
-
             {error && (
                 <div className="supplier-alert error">
                     {error}

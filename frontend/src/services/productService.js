@@ -1,9 +1,16 @@
 import api from "./api";
 
-export const getProducts = async () => {
-    const res = await api.get("/api/product");
+export const getProducts = async (page = 1, limit = 10) => {
+    const res = await api.get("/api/product", {
+        params: {
+            page,
+            limit
+        }
+    });
+
     return res.data;
 };
+
 
 export const getProductById = async (id) => {
     const res = await api.get(`/api/product/${id}`);
@@ -25,11 +32,17 @@ export const deleteProduct = async (id) => {
     return res.data;
 };
 
-export const searchProducts = async (search = "") => {
+export const searchProducts = async (
+    search = "",
+    page = 1,
+    limit = 10
+) => {
     const res = await api.get("/api/product/search", {
         params: {
             search,
-        },
+            page,
+            limit
+        }
     });
 
     return res.data;

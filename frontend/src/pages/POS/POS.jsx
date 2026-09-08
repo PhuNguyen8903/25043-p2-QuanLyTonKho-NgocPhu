@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+    getProducts,
     searchProducts,
     createSaleOrder,
 } from "../../services/posService";
@@ -8,36 +9,97 @@ import "./POS.css";
 function POS() {
     const [search, setSearch] = useState("");
     const [products, setProducts] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalProducts, setTotalProducts] = useState(0);
+    const pageSize = 10;
     const [cart, setCart] = useState([]);
-
     const [customerName, setCustomerName] = useState("");
     const [customerPhone, setCustomerPhone] = useState("");
-
     const [discountPercent, setDiscountPercent] = useState(0);
     const [amountPaid, setAmountPaid] = useState("");
     const [paymentMethod, setPaymentMethod] = useState("cash");
-
     const [loading, setLoading] = useState(false);
     const [searchLoading, setSearchLoading] = useState(false);
-
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [completedOrder, setCompletedOrder] = useState(null);
 
+    useEffect(() => {
+        loadProducts(1);
+    }, []);
 
-    const handleSearch = async () => {
+
+    const loadProducts = async (page = 1) => {
+        try {
+            setSearchLoading(true);
+            setError("");
+
+            const result = await getProducts(page, pageSize);
+
+            setProducts(
+                Array.isArray(result?.data)
+                    ? result.data
+                    : []
+            );
+
+            setTotalProducts(
+                Number(result?.total) || 0
+            );
+
+            setCurrentPage(page);
+        } catch (error) {
+            console.error("Get products error:", error);
+
+            setProducts([]);
+            setTotalProducts(0);
+
+            setError(
+                error.response?.data?.message ||
+                "Không thể tải danh sách sản phẩm."
+            );
+        } finally {
+            setSearchLoading(false);
+        }
+    };
+
+
+    const handleSearch = async (page = 1) => {
         try {
             setSearchLoading(true);
             setError("");
             setSuccess("");
 
-            const data = await searchProducts(search);
+            const keyword = search.trim();
 
-            setProducts(data);
+            // Nếu không nhập search
+            // thì quay lại danh sách sản phẩm
+            if (!keyword) {
+                await loadProducts(1);
+                return;
+            }
+
+            const result = await searchProducts(
+                keyword,
+                page,
+                pageSize
+            );
+
+            setProducts(
+                Array.isArray(result?.data)
+                    ? result.data
+                    : []
+            );
+
+            setTotalProducts(
+                Number(result?.total) || 0
+            );
+
+            setCurrentPage(page);
         } catch (error) {
             console.error("Search products error:", error);
 
             setProducts([]);
+            setTotalProducts(0);
 
             setError(
                 error.response?.data?.message ||
@@ -48,18 +110,42 @@ function POS() {
         }
     };
 
+
     const handleSearchKeyDown = (e) => {
         if (e.key === "Enter") {
-            handleSearch();
+            handleSearch(1);
         }
     };
 
+    const totalPages = Math.ceil(
+        totalProducts / pageSize
+    );
+
+    const handlePageChange = (page) => {
+        if (
+            page < 1 ||
+            page > totalPages ||
+            searchLoading
+        ) {
+            return;
+        }
+
+        if (search.trim()) {
+            handleSearch(page);
+        } else {
+            loadProducts(page);
+        }
+    };
 
     const addToCart = (product) => {
         setError("");
         setSuccess("");
 
-        if (Number(product.stock_quantity) <= 0) {
+        const stockQuantity =
+            Number(product.stock_quantity) || 0;
+
+        // Hết hàng
+        if (stockQuantity <= 0) {
             setError(
                 `Sản phẩm "${product.productsName}" đã hết hàng.`
             );
@@ -70,13 +156,14 @@ function POS() {
             (item) => item.product_id === product.id
         );
 
+        // Nếu sản phẩm đã có trong cart
         if (existingProduct) {
             if (
                 existingProduct.quantity + 1 >
-                Number(product.stock_quantity)
+                stockQuantity
             ) {
                 setError(
-                    `Sản phẩm "${product.productsName}" chỉ còn ${product.stock_quantity} sản phẩm.`
+                    `Sản phẩm "${product.productsName}" chỉ còn ${stockQuantity} sản phẩm.`
                 );
                 return;
             }
@@ -86,7 +173,8 @@ function POS() {
                     item.product_id === product.id
                         ? {
                             ...item,
-                            quantity: item.quantity + 1,
+                            quantity:
+                                item.quantity + 1,
                         }
                         : item
                 )
@@ -99,20 +187,26 @@ function POS() {
             return;
         }
 
+        // Thêm sản phẩm mới
         setCart((prev) => [
             ...prev,
             {
                 product_id: product.id,
-                productsCode: product.productsCode,
-                productsName: product.productsName,
+                productsCode:
+                    product.productsCode,
+                productsName:
+                    product.productsName,
                 unit: product.unit,
-                price: Number(product.price),
+                price: Number(product.price) || 0,
                 quantity: 1,
-                stock_quantity: Number(product.stock_quantity),
+                stock_quantity: stockQuantity,
             },
         ]);
-    };
 
+        setSuccess(
+            `Đã thêm ${product.productsName} vào giỏ hàng.`
+        );
+    };
 
     const increaseQuantity = (productId) => {
         setError("");
@@ -123,7 +217,10 @@ function POS() {
                     return item;
                 }
 
-                if (item.quantity + 1 > item.stock_quantity) {
+                if (
+                    item.quantity + 1 >
+                    item.stock_quantity
+                ) {
                     setError(
                         `Sản phẩm "${item.productsName}" chỉ còn ${item.stock_quantity} sản phẩm.`
                     );
@@ -133,13 +230,17 @@ function POS() {
 
                 return {
                     ...item,
-                    quantity: item.quantity + 1,
+                    quantity:
+                        item.quantity + 1,
                 };
             })
         );
     };
 
+
     const decreaseQuantity = (productId) => {
+        setError("");
+
         setCart((prev) =>
             prev.map((item) =>
                 item.product_id === productId
@@ -155,7 +256,10 @@ function POS() {
         );
     };
 
-    const handleQuantityChange = (productId, value) => {
+    const handleQuantityChange = (
+        productId,
+        value
+    ) => {
         const quantity = Number(value);
 
         setError("");
@@ -166,21 +270,25 @@ function POS() {
                     return item;
                 }
 
-                if (quantity <= 0) {
+                if (quantity <= 0 || Number.isNaN(quantity)) {
                     return {
                         ...item,
                         quantity: 1,
                     };
                 }
 
-                if (quantity > item.stock_quantity) {
+                if (
+                    quantity >
+                    item.stock_quantity
+                ) {
                     setError(
                         `Sản phẩm "${item.productsName}" chỉ còn ${item.stock_quantity} sản phẩm.`
                     );
 
                     return {
                         ...item,
-                        quantity: item.stock_quantity,
+                        quantity:
+                            item.stock_quantity,
                     };
                 }
 
@@ -192,15 +300,14 @@ function POS() {
         );
     };
 
-
     const removeFromCart = (productId) => {
         setCart((prev) =>
             prev.filter(
-                (item) => item.product_id !== productId
+                (item) =>
+                    item.product_id !== productId
             )
         );
     };
-
 
     const subtotal = cart.reduce(
         (total, item) =>
@@ -209,27 +316,27 @@ function POS() {
         0
     );
 
-    const discountAmount = subtotal * (Number(discountPercent || 0) / 100);
-    const totalAmount = subtotal - discountAmount;
-    const changeAmount = Number(amountPaid || 0) - totalAmount;
+    const discountAmount =subtotal *(Number(discountPercent || 0) / 100);
+    const totalAmount =subtotal - discountAmount;
+    const changeAmount =Number(amountPaid || 0) -totalAmount;
 
     const formatCurrency = (value) => {
-        return new Intl.NumberFormat("vi-VN").format(
+        return new Intl.NumberFormat(
+            "vi-VN"
+        ).format(
             Number(value || 0)
         );
     };
-
 
     const handlePayment = async () => {
         setError("");
         setSuccess("");
         setCompletedOrder(null);
-
         if (paymentMethod === "transfer") {
-        setError(
-            "Phương thức chuyển khoản hiện chưa được hỗ trợ."
-        );
-        return;
+            setError(
+                "Phương thức chuyển khoản hiện chưa được hỗ trợ."
+            );
+            return;
         }
 
         if (cart.length === 0) {
@@ -238,9 +345,10 @@ function POS() {
             );
             return;
         }
-
         for (const item of cart) {
-            if (item.quantity <= 0) {
+            if (
+                item.quantity <= 0
+            ) {
                 setError(
                     `Số lượng ${item.productsName} không hợp lệ.`
                 );
@@ -248,7 +356,8 @@ function POS() {
             }
 
             if (
-                item.quantity > item.stock_quantity
+                item.quantity >
+                item.stock_quantity
             ) {
                 setError(
                     `Sản phẩm ${item.productsName} không đủ tồn kho.`
@@ -256,8 +365,10 @@ function POS() {
                 return;
             }
         }
-
-        if ( amountPaid === "" || Number(amountPaid) < totalAmount ) {
+        if (
+            amountPaid === "" ||
+            Number(amountPaid) < totalAmount
+        ) {
             setError(
                 "Số tiền khách đưa chưa đủ để thanh toán."
             );
@@ -266,35 +377,44 @@ function POS() {
 
         try {
             setLoading(true);
-
             const payload = {
                 customer_name:customerName || null,
-
-                customer_phone: customerPhone || null,
-                amount_paid: Number(amountPaid),
-                payment_method: paymentMethod,
-
+                customer_phone:customerPhone || null,
+                amount_paid:Number(amountPaid),
+                payment_method:paymentMethod,
                 discountPercent:Number(discountPercent || 0),
-
                 items: cart.map((item) => ({
-                    product_id: item.product_id,
-                    quantity: item.quantity,
-                    unit_price: item.price,
+                    product_id:item.product_id,
+                    quantity:item.quantity,
+                    unit_price:item.price,
                 })),
             };
 
-            const data =await createSaleOrder(payload);
+            const data =
+                await createSaleOrder(payload);
 
-            setSuccess("Thanh toán thành công." );
+            setSuccess(
+                "Thanh toán thành công."
+            );
+
             setCompletedOrder(data);
 
-            // reset giỏ hàng
             setCart([]);
             setCustomerName("");
             setCustomerPhone("");
             setAmountPaid("");
             setDiscountPercent(0);
+            setPaymentMethod("cash");
 
+            if (search.trim()) {
+                await handleSearch(
+                    currentPage
+                );
+            } else {
+                await loadProducts(
+                    currentPage
+                );
+            }
         } catch (error) {
             console.error(
                 "Create sale order error:",
@@ -310,10 +430,9 @@ function POS() {
         }
     };
 
-
-    const handleReset = () => {
+    const handleReset = async () => {
         setSearch("");
-        setProducts([]);
+
         setCart([]);
 
         setCustomerName("");
@@ -321,11 +440,16 @@ function POS() {
 
         setDiscountPercent(0);
         setAmountPaid("");
+
         setPaymentMethod("cash");
 
         setError("");
         setSuccess("");
+
         setCompletedOrder(null);
+
+        // Load lại danh sách sản phẩm
+        await loadProducts(1);
     };
 
     return (
@@ -333,13 +457,11 @@ function POS() {
             <div className="pos-header">
                 <div>
                     <h1>POS Bán hàng</h1>
-
                     <p>
                         Tạo đơn bán hàng và thanh toán
                     </p>
                 </div>
             </div>
-
 
             {error && (
                 <div className="pos-alert error">
@@ -352,6 +474,7 @@ function POS() {
                     {success}
                 </div>
             )}
+
             {completedOrder && (
                 <div className="payment-success-card">
                     <div>
@@ -362,7 +485,9 @@ function POS() {
                         <p>
                             Mã đơn bán:{" "}
                             <b>
-                                {completedOrder.saleCode}
+                                {
+                                    completedOrder.saleCode
+                                }
                             </b>
                         </p>
                     </div>
@@ -375,16 +500,16 @@ function POS() {
                         <strong>
                             {formatCurrency(
                                 completedOrder.total_amount
-                            )} ₫
+                            )}{" "}
+                            ₫
                         </strong>
                     </div>
                 </div>
             )}
-            <div className="pos-layout">
 
+            <div className="pos-layout">
                 <div className="pos-left">
                     <section className="pos-card">
-
                         <div className="pos-section-title">
                             <div>
                                 <h2>
@@ -398,7 +523,6 @@ function POS() {
                         </div>
 
                         <div className="product-search">
-
                             <input
                                 type="text"
                                 value={search}
@@ -415,8 +539,12 @@ function POS() {
 
                             <button
                                 type="button"
-                                onClick={handleSearch}
-                                disabled={searchLoading}
+                                onClick={() =>
+                                    handleSearch(1)
+                                }
+                                disabled={
+                                    searchLoading
+                                }
                             >
                                 {searchLoading
                                     ? "Đang tìm..."
@@ -426,7 +554,6 @@ function POS() {
                     </section>
 
                     <section className="pos-card">
-
                         <div className="pos-section-title">
                             <div>
                                 <h2>
@@ -437,47 +564,111 @@ function POS() {
                                     Chọn sản phẩm để thêm vào đơn
                                 </p>
                             </div>
+
+                            <span>
+                                Tổng{" "}
+                                {totalProducts}{" "}
+                                sản phẩm
+                            </span>
                         </div>
 
                         <div className="product-result-table-wrapper">
                             <table className="product-result-table">
+
                                 <thead>
                                     <tr>
-                                        <th>Mã SP</th>
-                                        <th>Tên sản phẩm</th>
-                                        <th>ĐVT</th>
-                                        <th>Đơn giá</th>
-                                        <th>Tồn kho</th>
+                                        <th>
+                                            Mã SP
+                                        </th>
+
+                                        <th>
+                                            Tên sản phẩm
+                                        </th>
+
+                                        <th>
+                                            ĐVT
+                                        </th>
+
+                                        <th>
+                                            Đơn giá
+                                        </th>
+
+                                        <th>
+                                            Tồn kho
+                                        </th>
+
                                         <th></th>
                                     </tr>
                                 </thead>
 
                                 <tbody>
-                                    {products.length === 0 ? (
+                                    {searchLoading ? (
                                         <tr>
                                             <td
                                                 colSpan="6"
                                                 className="table-empty"
                                             >
-                                                Chưa có sản phẩm.
+                                                Đang tải sản phẩm...
                                             </td>
                                         </tr>
-                                    ):(
+                                    ) : products.length === 0 ? (
+                                        <tr>
+                                            <td
+                                                colSpan="6"
+                                                className="table-empty"
+                                            >
+                                                Không tìm thấy sản phẩm.
+                                            </td>
+                                        </tr>
+                                    ) : (
                                         products.map(
                                             (product) => (
-                                                <tr  key={ product.id  }>
-                                                    <td>{  product.productsCode} </td>
-                                                    <td> { product.productsName }</td>
-                                                    <td>{ product.unit}</td>
+                                                <tr
+                                                    key={
+                                                        product.id
+                                                    }
+                                                >
+                                                    <td>
+                                                        {
+                                                            product.productsCode
+                                                        }
+                                                    </td>
+
+                                                    <td>
+                                                        {
+                                                            product.productsName
+                                                        }
+                                                    </td>
+
+                                                    <td>
+                                                        {
+                                                            product.unit
+                                                        }
+                                                    </td>
+
                                                     <td>
                                                         {formatCurrency(
                                                             product.price
                                                         )}{" "}
                                                         ₫
                                                     </td>
-                                                    <td> { product.stock_quantity }   </td>
+
                                                     <td>
-                                                        <button type="button" className="add-product-button" onClick={() => addToCart(product)}>
+                                                        {
+                                                            product.stock_quantity
+                                                        }
+                                                    </td>
+
+                                                    <td>
+                                                        <button
+                                                            type="button"
+                                                            className="add-product-button"
+                                                            onClick={() =>
+                                                                addToCart(
+                                                                    product
+                                                                )
+                                                            }
+                                                        >
                                                             + Thêm
                                                         </button>
                                                     </td>
@@ -488,9 +679,58 @@ function POS() {
                                 </tbody>
                             </table>
                         </div>
+
+                        {totalPages > 1 && (
+                            <div className="product-pagination">
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        handlePageChange(
+                                            currentPage - 1
+                                        )
+                                    }
+                                    disabled={
+                                        currentPage === 1 ||
+                                        searchLoading
+                                    }
+                                >
+                                    ← Trước
+                                </button>
+
+                                <div className="pagination-info">
+                                    Trang{" "}
+                                    <strong>
+                                        {currentPage}
+                                    </strong>{" "}
+                                    /{" "}
+                                    <strong>
+                                        {totalPages}
+                                    </strong>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        handlePageChange(
+                                            currentPage + 1
+                                        )
+                                    }
+                                    disabled={
+                                        currentPage ===
+                                        totalPages ||
+                                        searchLoading
+                                    }
+                                >
+                                    Sau →
+                                </button>
+
+                            </div>
+                        )}
                     </section>
 
                     <section className="pos-card">
+
                         <div className="pos-section-title">
                             <div>
                                 <h2>
@@ -501,6 +741,7 @@ function POS() {
                                     Sản phẩm đang được chọn
                                 </p>
                             </div>
+
                             <span className="cart-count">
                                 {cart.length} sản phẩm
                             </span>
@@ -508,19 +749,39 @@ function POS() {
 
                         <div className="cart-table-wrapper">
                             <table className="cart-table">
+
                                 <thead>
                                     <tr>
-                                        <th>#</th>
-                                        <th>Mã SP</th>
-                                        <th>Tên sản phẩm</th>
-                                        <th>Đơn giá</th>
-                                        <th>Số lượng</th>
-                                        <th>Thành tiền</th>
+                                        <th>
+                                            #
+                                        </th>
+
+                                        <th>
+                                            Mã SP
+                                        </th>
+
+                                        <th>
+                                            Tên sản phẩm
+                                        </th>
+
+                                        <th>
+                                            Đơn giá
+                                        </th>
+
+                                        <th>
+                                            Số lượng
+                                        </th>
+
+                                        <th>
+                                            Thành tiền
+                                        </th>
+
                                         <th></th>
                                     </tr>
                                 </thead>
 
                                 <tbody>
+
                                     {cart.length === 0 ? (
                                         <tr>
                                             <td
@@ -543,7 +804,8 @@ function POS() {
                                                 >
 
                                                     <td>
-                                                        {index + 1}
+                                                        {index +
+                                                            1}
                                                     </td>
 
                                                     <td>
@@ -566,7 +828,6 @@ function POS() {
                                                     </td>
 
                                                     <td>
-
                                                         <div className="quantity-control">
 
                                                             <button
@@ -594,7 +855,8 @@ function POS() {
                                                                 ) =>
                                                                     handleQuantityChange(
                                                                         item.product_id,
-                                                                        e.target.value
+                                                                        e.target
+                                                                            .value
                                                                     )
                                                                 }
                                                             />
@@ -618,7 +880,6 @@ function POS() {
                                                                 item.stock_quantity
                                                             }
                                                         </small>
-
                                                     </td>
 
                                                     <td className="cart-item-total">
@@ -630,7 +891,6 @@ function POS() {
                                                     </td>
 
                                                     <td>
-
                                                         <button
                                                             type="button"
                                                             className="remove-cart-button"
@@ -642,13 +902,13 @@ function POS() {
                                                         >
                                                             ×
                                                         </button>
-
                                                     </td>
 
                                                 </tr>
                                             )
                                         )
                                     )}
+
                                 </tbody>
                             </table>
                         </div>
@@ -658,6 +918,7 @@ function POS() {
 
                 <div className="pos-right">
                     <section className="pos-card">
+
                         <div className="pos-section-title">
                             <div>
                                 <h2>
@@ -671,6 +932,7 @@ function POS() {
                         </div>
 
                         <div className="customer-form">
+
                             <div className="form-group">
                                 <label>
                                     Tên khách hàng
@@ -683,7 +945,8 @@ function POS() {
                                     }
                                     onChange={(e) =>
                                         setCustomerName(
-                                            e.target.value
+                                            e.target
+                                                .value
                                         )
                                     }
                                     placeholder="Nhập tên khách hàng..."
@@ -702,16 +965,19 @@ function POS() {
                                     }
                                     onChange={(e) =>
                                         setCustomerPhone(
-                                            e.target.value
+                                            e.target
+                                                .value
                                         )
                                     }
                                     placeholder="Nhập số điện thoại..."
                                 />
                             </div>
+
                         </div>
                     </section>
 
                     <section className="pos-card payment-card">
+
                         <div className="pos-section-title">
                             <div>
                                 <h2>
@@ -725,6 +991,7 @@ function POS() {
                         </div>
 
                         <div className="payment-summary">
+
                             <div>
                                 <span>
                                     Tạm tính
@@ -739,6 +1006,7 @@ function POS() {
                             </div>
 
                             <div className="discount-row">
+
                                 <span>
                                     Giảm giá (%)
                                 </span>
@@ -752,7 +1020,8 @@ function POS() {
                                     }
                                     onChange={(e) =>
                                         setDiscountPercent(
-                                            e.target.value
+                                            e.target
+                                                .value
                                         )
                                     }
                                 />
@@ -784,6 +1053,7 @@ function POS() {
                                     )}{" "}
                                     ₫
                                 </strong>
+
                             </div>
                         </div>
 
@@ -791,8 +1061,10 @@ function POS() {
                             <div className="form-group">
 
                                 <label>
-                                    Tiền khách đưa
-                                    <span>*</span>
+                                    Tiền khách đưa{" "}
+                                    <span>
+                                        *
+                                    </span>
                                 </label>
 
                                 <input
@@ -803,7 +1075,8 @@ function POS() {
                                     }
                                     onChange={(e) =>
                                         setAmountPaid(
-                                            e.target.value
+                                            e.target
+                                                .value
                                         )
                                     }
                                     placeholder="Nhập số tiền..."
@@ -811,13 +1084,15 @@ function POS() {
                             </div>
 
                             <div className="change-row">
+
                                 <span>
                                     Tiền thừa
                                 </span>
 
                                 <strong
                                     className={
-                                        changeAmount < 0
+                                        changeAmount <
+                                            0
                                             ? "not-enough"
                                             : ""
                                     }
@@ -845,7 +1120,8 @@ function POS() {
                                     }
                                     onChange={(e) =>
                                         setPaymentMethod(
-                                            e.target.value
+                                            e.target
+                                                .value
                                         )
                                     }
                                 >
@@ -857,9 +1133,7 @@ function POS() {
                                         Chuyển khoản
                                     </option>
                                 </select>
-
                             </div>
-
                         </div>
 
                         <div className="payment-actions">
@@ -870,7 +1144,9 @@ function POS() {
                                 onClick={
                                     handleReset
                                 }
-                                disabled={loading}
+                                disabled={
+                                    loading
+                                }
                             >
                                 Hủy đơn
                             </button>
@@ -883,7 +1159,8 @@ function POS() {
                                 }
                                 disabled={
                                     loading ||
-                                    cart.length === 0
+                                    cart.length ===
+                                    0
                                 }
                             >
                                 {loading
@@ -894,11 +1171,8 @@ function POS() {
                         </div>
 
                     </section>
-
                 </div>
-
             </div>
-
         </div>
     );
 }
