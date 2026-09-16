@@ -56,6 +56,7 @@ const sessionStore = new MySQLStrore({
     pool
 );
 
+app.set('trust proxy', 1);
 
 app.use(session({
     secret: config.sessionSecret,
@@ -64,7 +65,7 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         domain: process.env.COOKIE_DOMAIN,
-        sameSite: "lax",
+        sameSite: "none",
         secure: config.env === "production",
         httpOnly: true,
         maxAge: 1 * 60 * 60 * 1000, // khop voi expiration 
