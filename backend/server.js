@@ -67,6 +67,7 @@ app.use(session({
         sameSite: "none",
         secure: config.env === "production",
         httpOnly: true,
+        partitioned: true,
         maxAge: 1 * 60 * 60 * 1000, // khop voi expiration 
     }
 }))
