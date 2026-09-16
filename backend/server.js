@@ -23,7 +23,7 @@ const port = process.env.PORT;
 app.use(requestLoggerMiddleware)
 app.use(
     cors({
-        origin: "*",
+        origin: process.env.FRONTEND_URL,
         credentials: true
     })
 );
