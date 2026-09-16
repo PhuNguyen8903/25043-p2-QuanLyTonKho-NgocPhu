@@ -1,5 +1,5 @@
-const { PurchaseOrder, Product, PurchaseOrderItem, Supplier, User, Sequelize } = require("../model");
-const { Op } = Sequelize;
+const { PurchaseOrder, Product, PurchaseOrderItem, Supplier, User } = require("../model");
+const { Op } = require("sequelize");
 
 
 exports.searchOrders = async (req, res, next) => {
