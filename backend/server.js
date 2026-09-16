@@ -23,7 +23,7 @@ const port = process.env.PORT;
 app.use(requestLoggerMiddleware)
 app.use(
     cors({
-        origin: "http://localhost:5173",
+        origin: "*",
         credentials: true
     })
 );
@@ -69,6 +69,10 @@ app.use(session({
     }
 }))
 
+// health check publish api
+app.get('/api/health', (_req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
 
 // route o day
 app.use("/api/auth", authRoute);
