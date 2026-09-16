@@ -5,6 +5,7 @@ const api = axios.create({
     headers: {
         "Content-Type": "application/json",
     },
+    
     withCredentials: true, // do sử dụng cookie session nên cần nếu kô sẽ ăn block by cookie
 });
 

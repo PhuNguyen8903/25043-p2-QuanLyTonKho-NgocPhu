@@ -64,10 +64,9 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        sameSite: "none",
+        sameSite: "strict",
         secure: config.env === "production",
         httpOnly: true,
-        partitioned: true,
         maxAge: 1 * 60 * 60 * 1000, // khop voi expiration 
     }
 }))
