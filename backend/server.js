@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require("cors");
 const cookieParser = require("cookie-parser")
 const session = require('express-session');
+const mysql = require('mysql2');
 const MySQLStrore = require('express-mysql-session')(session);
 const app = express();
 const config = require("./config/config");
@@ -31,49 +32,62 @@ app.use(express.json()); // convert body to json
 app.use(cookieParser());
 
 const dbConfig = config[config.env]
-const sessionStoreOptions = {
+const pool = mysql.createPool({
     host: dbConfig.host,
     port: dbConfig.port,
     user: dbConfig.username,
     password: dbConfig.password,
     database: dbConfig.database,
-    clearExpired: true,
-    checkExpirationInterval: 10*60*1000, //10p
-    expiration: 1*60*60*1000,
-}
 
-const sessionStore = new MySQLStrore(sessionStoreOptions)
+    ssl: {
+        rejectUnauthorized: false
+    },
+
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+})
+
+const sessionStore = new MySQLStrore({
+    clearExpired: true,
+    checkExpirationInterval: 10 * 60 * 1000, //10p
+    expiration: 1 * 60 * 60 * 1000,
+    },
+    pool
+);
+
+
 app.use(session({
     secret: config.sessionSecret,
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
-    cookie:{
+    cookie: {
         secure: config.env === "production",
         httpOnly: true,
-        maxAge: 1*60*60*1000, // khop voi expiration 
+        maxAge: 1 * 60 * 60 * 1000, // khop voi expiration 
     }
 }))
 
 
 // route o day
-app.use("/api/auth",authRoute);
-app.use("/api/user",userRoute);
-app.use("/api/purchase",purchaseRoute);
-app.use("/api/product",productRoute);
+app.use("/api/auth", authRoute);
+app.use("/api/user", userRoute);
+app.use("/api/purchase", purchaseRoute);
+app.use("/api/product", productRoute);
 app.use("/api/supplier", supplierRoute);
-app.use("/api/pos",posRoute);
+app.use("/api/pos", posRoute);
 
 app.use(errorHandleMiddleware)
 
 db.sequelize.authenticate()
-    .then(()=>{
+    .then(() => {
         console.log("ket noi csdl thanh cong")
     })
-    .catch(err =>{
-        console.log("ko the ket noi csdl:",err)
+    .catch(err => {
+        console.log("ko the ket noi csdl:", err)
     })
 
-app.listen(port, ()=>{
+app.listen(port, () => {
     console.log(`server is listening at http://localhost:${port}`)
 })
