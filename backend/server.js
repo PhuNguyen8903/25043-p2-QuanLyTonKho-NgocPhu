@@ -64,7 +64,7 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         domain: process.env.COOKIE_DOMAIN,
-        sameSite: "strict",
+        sameSite: "lax",
         secure: config.env === "production",
         httpOnly: true,
         maxAge: 1 * 60 * 60 * 1000, // khop voi expiration 
