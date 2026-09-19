@@ -72,9 +72,9 @@ app.use(session({
 }))
 
 // health check publish api
-app.get('/api/health', (_req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
+// app.get('/api/health', (_req, res) => {
+//   res.json({ status: 'OK', timestamp: new Date().toISOString() });
+// });
 
 // route o day
 app.use("/api/auth", authRoute);

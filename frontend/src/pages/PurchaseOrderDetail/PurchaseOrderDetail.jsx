@@ -103,43 +103,23 @@ function PurchaseOrderDetail() {
                 }
 
                 setFormData({
-                    supplier_id:
-                        data.supplier_id || "",
-
-                    assigned_employee_id:
-                        data.assigned_employee_id || "",
-
-                    order_date:
-                        data.order_date || "",
-
-                    note:
-                        data.note || "",
+                    supplier_id:data.supplier_id || "",
+                    assigned_employee_id: data.assigned_employee_id || "",
+                    order_date:data.order_date || "",
+                    note: data.note || "",
                 });
 
                 setStatus(
                     data.status || "draft"
                 );
 
-                if (
-                    data.items &&
-                    data.items.length > 0
-                ) {
+                if ( data.items && data.items.length > 0) {
                     setItems(
                         data.items.map((item) => ({
-                            product_id:
-                                item.product_id,
-
-                            product_name:
-                                item.product?.productsName ||
-                                "",
-
-                            quantity:
-                                item.quantity,
-
-                            unit_price:
-                                Number(
-                                    item.unit_price
-                                ),
+                            product_id:item.product_id,
+                            product_name: item.product?.productsName || "",
+                            quantity: item.quantity,
+                            unit_price: Number(item.unit_price),
                         }))
                     );
                 } else {
@@ -189,33 +169,16 @@ function PurchaseOrderDetail() {
         index,
         productId
     ) => {
-        const product =
-            products.find(
-                (p) =>
-                    p.id === Number(productId)
-            );
-
+        const product =products.find((p) =>p.id === Number(productId));
         setItems((prev) =>
             prev.map((item, i) =>
-                i === index
+                i=== index
                     ? {
                         ...item,
-
-                        product_id:
-                            productId,
-
-                        product_name:
-                            product?.productsName ||
-                            "",
-
-                        // Nếu sản phẩm có giá mặc định
-                        // thì có thể lấy luôn giá này.
-                        // Nếu muốn người dùng nhập giá
-                        // thủ công thì giữ 0.
-                        unit_price:
-                            item.unit_price || 0,
-                    }
-                    : item
+                        product_id:productId,
+                        product_name: product?.productsName || "",
+                        unit_price: Number(product?.price) || 0,
+                    }: item
             )
         );
     };
