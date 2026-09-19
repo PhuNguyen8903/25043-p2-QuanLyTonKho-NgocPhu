@@ -43,7 +43,6 @@ function Login() {
         emailOrusername,
         password
       );
-      console.log("Login success:", data);
       navigate("/purchaseorders");
 
     } catch (error) {

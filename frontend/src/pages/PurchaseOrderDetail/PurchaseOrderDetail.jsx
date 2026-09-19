@@ -900,6 +900,7 @@ function PurchaseOrderDetail() {
                                                 value={
                                                     item.unit_price
                                                 }
+                                                readOnly
                                                 onChange={(
                                                     e
                                                 ) =>
